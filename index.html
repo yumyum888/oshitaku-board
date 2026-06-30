@@ -250,7 +250,7 @@
   </div>
 
   <!-- ===== 右：時計 ===== -->
-  <div class="right" id="clockPanel">
+  <div class="right" id="clockPanel" onclick="speakTime()" style="cursor:pointer;">
     <div class="clock-label">🦕 いま なんじ？ 🦖</div>
     <canvas id="clockCanvas"></canvas>
     <div class="digital" id="digital">--:--</div>
@@ -451,6 +451,19 @@ function confetti() {
       setTimeout(() => el.remove(), 3800);
     }, i * 22);
   }
+}
+
+/* ── 時刻読み上げ ── */
+function speakTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const mText = m === 0 ? 'ちょうど' : m + 'ふん';
+  const text = `いまは ${h}じ ${mText} です`;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
 }
 
 /* ── 初期化 ── */

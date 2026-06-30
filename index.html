@@ -292,9 +292,12 @@ function resizeClock() {
   const panel = document.getElementById('clockPanel');
   const w = panel.clientWidth;
   const h = panel.clientHeight;
-  if (!w || !h) return; /* まだレイアウト未完了 */
-  const overhead = 100; /* ラベル＋デジタル＋gap の概算 */
-  const size = Math.max(60, Math.min(w - 20, h - overhead, 520));
+  if (w < 50 || h < 50) return; /* まだレイアウト未確定 */
+  const label   = panel.querySelector('.clock-label');
+  const digital = document.getElementById('digital');
+  const usedH = (label ? label.offsetHeight : 30) + (digital ? digital.offsetHeight : 50) + 40;
+  const size = Math.max(80, Math.min(w - 20, h - usedH, 520));
+  if (canvas.width === size) return;
   canvas.width  = size;
   canvas.height = size;
 }
@@ -460,18 +463,20 @@ function confetti() {
   }
 }
 
-/* ── 初期化（2フレーム待ってサイズ確定後に描画） ── */
-function init() {
-  resizeClock();
-  /* レイアウト確定を待つ */
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      resizeClock();
-      tick();
-    });
-  });
+/* ── 初期化 ── */
+/* ResizeObserver：iframeでも panel サイズが確定したタイミングを確実に捉える */
+if (window.ResizeObserver) {
+  new ResizeObserver(resizeClock).observe(document.getElementById('clockPanel'));
 }
-window.addEventListener('load', init);
+
+/* ポーリング：iframe環境でloadより遅れてサイズが決まるケース対策 */
+let _polls = 0;
+function pollResize() {
+  resizeClock();
+  if (canvas.width < 80 && ++_polls < 40) setTimeout(pollResize, 200);
+}
+
+window.addEventListener('load', () => { pollResize(); tick(); });
 window.addEventListener('resize', resizeClock);
 </script>
 </body>

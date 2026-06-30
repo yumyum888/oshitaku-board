@@ -1,21 +1,470 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ストップウォッチ</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>🦖 お支度ボード 🦕</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    html, body {
+      height: 100%; width: 100%; overflow: hidden;
+      font-family: 'Hiragino Maru Gothic Pro', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+      background: linear-gradient(135deg, #F0F4FF 0%, #FFF7ED 100%);
+      user-select: none; -webkit-user-select: none;
+    }
+
+    /* 背景の恐竜 */
+    #dinoBg { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+    .dino { position:absolute; opacity:.08; animation:dinoFloat ease-in-out infinite; }
+    @keyframes dinoFloat {
+      0%,100% { transform:translateY(0) rotate(-8deg); }
+      50%     { transform:translateY(-18px) rotate(8deg); }
+    }
+
+    /* ── レイアウト ── */
+    .wrap { position:relative; z-index:1; display:flex; height:100vh; width:100vw; }
+
+    /* 縦向き：上にタスク、下に時計 */
+    @media (orientation:portrait) {
+      .wrap  { flex-direction:column; }
+      .left  { width:100% !important; height:60% !important; border-right:none !important; border-bottom:1px solid rgba(0,0,0,.07); }
+      .right { width:100% !important; height:40% !important; }
+    }
+
+    /* ───── 左：タスク ───── */
+    .left {
+      width:52%; height:100%;
+      padding:10px 12px 8px;
+      display:flex; flex-direction:column;
+      background:rgba(255,255,255,.55);
+      backdrop-filter:blur(10px);
+      border-right:1px solid rgba(0,0,0,.07);
+    }
+
+    .board-header {
+      display:flex; align-items:center; justify-content:center;
+      gap:6px; margin-bottom:8px; flex-shrink:0;
+    }
+    .board-title {
+      font-size:clamp(1.1rem,2.5vw,1.9rem);
+      font-weight:900; color:#1E293B;
+    }
+
+    .tasks { flex:1; display:flex; flex-direction:column; gap:6px; overflow-y:auto; min-height:0; }
+
+    /* ── タスクボタン（タップ前：白） ── */
+    .task {
+      flex:1; min-height:48px;
+      display:flex; align-items:center;
+      padding:0 12px 0 0;
+      border-radius:20px;
+      border:2px solid #E2E8F0;
+      background:white;
+      cursor:pointer; touch-action:manipulation;
+      box-shadow:0 2px 6px rgba(0,0,0,.07);
+      overflow:hidden; position:relative;
+      transition:border-color .35s, box-shadow .35s, background .4s;
+    }
+
+    /* 左の色ストライプ */
+    .stripe {
+      width:9px; height:100%; flex-shrink:0;
+      align-self:stretch; margin-right:12px;
+      transition:background .4s;
+    }
+    .c-bath   .stripe { background:linear-gradient(180deg,#60B5F5,#1E88E5); }
+    .c-meal   .stripe { background:linear-gradient(180deg,#FFA726,#EF6C00); }
+    .c-yogurt .stripe { background:linear-gradient(180deg,#F06292,#AD1457); }
+    .c-moku   .stripe { background:linear-gradient(180deg,#BA68C8,#6A1B9A); }
+    .c-teeth  .stripe { background:linear-gradient(180deg,#4DD0E1,#00838F); }
+    .c-clean  .stripe { background:linear-gradient(180deg,#81C784,#2E7D32); }
+    .c-bed    .stripe { background:linear-gradient(180deg,#7986CB,#283593); }
+
+    .t-icon { font-size:clamp(1.6rem,3vw,2.5rem); margin-right:10px; flex-shrink:0; line-height:1; }
+
+    .t-name {
+      flex:1; text-align:left;
+      font-size:clamp(1.1rem,2.2vw,1.75rem);
+      font-weight:800; color:#1E293B;
+      transition:color .35s;
+    }
+
+    /* 右の丸チェック */
+    .t-circle {
+      width:clamp(28px,3.5vw,40px); height:clamp(28px,3.5vw,40px);
+      border-radius:50%; flex-shrink:0;
+      border:3px solid #CBD5E1;
+      display:flex; align-items:center; justify-content:center;
+      background:transparent;
+      transition:all .4s cubic-bezier(.175,.885,.32,1.275);
+    }
+    .t-check {
+      font-size:clamp(1rem,2vw,1.5rem); line-height:1;
+      color:white; font-weight:900;
+      opacity:0; transform:scale(0) rotate(-90deg);
+      transition:all .45s cubic-bezier(.175,.885,.32,1.275);
+    }
+
+    /* ── タスクボタン（タップ後：緑） ── */
+    .task.done {
+      background:linear-gradient(135deg,#22C55E,#15803D);
+      border-color:#16A34A;
+      box-shadow:0 5px 20px rgba(34,197,94,.38);
+    }
+    .task.done .stripe  { background:rgba(255,255,255,.22); }
+    .task.done .t-name  { color:white; }
+    .task.done .t-circle {
+      background:rgba(255,255,255,.28);
+      border-color:rgba(255,255,255,.55);
+      transform:scale(1.12);
+    }
+    .task.done .t-check { opacity:1; transform:scale(1) rotate(0deg); }
+
+    /* 完了アニメーション */
+    @keyframes pop {
+      0%   { transform:scale(1); }
+      28%  { transform:scale(1.09) rotate(.6deg); }
+      55%  { transform:scale(.96) rotate(-.4deg); }
+      78%  { transform:scale(1.03); }
+      100% { transform:scale(1); }
+    }
+    .task.popping { animation:pop .55s cubic-bezier(.175,.885,.32,1.275) both; }
+
+    /* フッター */
+    .footer { margin-top:6px; display:flex; flex-direction:column; gap:5px; flex-shrink:0; }
+
+    .celeb {
+      display:none; text-align:center; padding:8px 12px;
+      background:linear-gradient(135deg,#FEF9C3,#FDE047);
+      border:2.5px solid #EAB308; border-radius:16px;
+      font-size:clamp(.85rem,1.7vw,1.25rem); font-weight:900; color:#92400E;
+      animation:pulse .8s ease infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform:scale(1); }
+      to   { transform:scale(1.02); box-shadow:0 0 16px rgba(234,179,8,.5); }
+    }
+
+    .reset-btn {
+      padding:7px; border-radius:14px;
+      border:2px solid #E2E8F0; background:rgba(255,255,255,.7);
+      color:#64748B; font-size:clamp(.75rem,1.4vw,.95rem);
+      font-weight:700; cursor:pointer; font-family:inherit;
+      touch-action:manipulation;
+    }
+    .reset-btn:active { opacity:.7; }
+
+    /* ───── 右：時計 ───── */
+    .right {
+      width:48%; height:100%;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:6px; padding:10px;
+      background:rgba(255,255,255,.25);
+    }
+
+    .clock-label {
+      font-size:clamp(.85rem,1.9vw,1.4rem);
+      font-weight:900; color:#334155; text-align:center; flex-shrink:0;
+    }
+
+    #clockCanvas { flex-shrink:0; display:block; }
+
+    .digital {
+      font-size:clamp(1.8rem,4.5vw,4rem);
+      font-weight:900; color:#1E3A8A; letter-spacing:4px;
+      background:rgba(255,255,255,.8); padding:4px 18px;
+      border-radius:14px; box-shadow:0 3px 10px rgba(0,0,0,.08);
+      flex-shrink:0;
+    }
+
+    /* コンフェッティ */
+    @keyframes cfFall {
+      0%   { opacity:1; transform:translateY(-60px) rotate(0deg); }
+      80%  { opacity:1; }
+      100% { opacity:0; transform:translateY(110vh) rotate(900deg); }
+    }
+    .cf { position:fixed; pointer-events:none; animation:cfFall linear forwards; z-index:9999; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>ストップウォッチ</h1>
-        <div class="display">00:00:00</div>
-        <div class="buttons">
-            <button id="start">スタート</button>
-            <button id="stop">ストップ</button>
-            <button id="reset">リセット</button>
-        </div>
+
+<div id="dinoBg"></div>
+
+<div class="wrap">
+
+  <!-- ===== 左：タスク ===== -->
+  <div class="left">
+    <div class="board-header">
+      <span style="font-size:1.7rem">🦕</span>
+      <h1 class="board-title">お支度ボード</h1>
+      <span style="font-size:1.7rem">🦖</span>
     </div>
-    <script src="script.js"></script>
+
+    <div class="tasks">
+      <button class="task c-bath"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🛁</span>
+        <span class="t-name">お風呂</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-meal"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🍚</span>
+        <span class="t-name">ご飯</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-yogurt" onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🥣</span>
+        <span class="t-name">ヨーグルト</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-moku"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🫧</span>
+        <span class="t-name">もくもく</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-teeth"  onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🦷</span>
+        <span class="t-name">歯磨き</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-clean"  onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🧹</span>
+        <span class="t-name">お片づけ</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-bed"    onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🛏️</span>
+        <span class="t-name">ベッドに行く</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+    </div>
+
+    <div class="footer">
+      <div class="celeb" id="celeb">🎉 ぜんぶできたよ！えらい！🦖💫🦕 🎉</div>
+      <button class="reset-btn" onclick="resetAll()">🔄 もう一度はじめる</button>
+    </div>
+  </div>
+
+  <!-- ===== 右：時計 ===== -->
+  <div class="right" id="clockPanel">
+    <div class="clock-label">🦕 いま なんじ？ 🦖</div>
+    <canvas id="clockCanvas"></canvas>
+    <div class="digital" id="digital">--:--</div>
+  </div>
+</div>
+
+<script>
+/* ── 背景の恐竜 ── */
+(function () {
+  const bg = document.getElementById('dinoBg');
+  const items = [
+    {e:'🦖',t:'3%', l:'2%',  s:'4rem',  d:'4.2s',dl:'0s'  },
+    {e:'🦕',t:'72%',l:'3%',  s:'4.5rem',d:'5.1s',dl:'1.3s'},
+    {e:'🦖',t:'38%',l:'46%', s:'3.5rem',d:'3.8s',dl:'0.7s'},
+    {e:'🦕',t:'5%', r:'2%',  s:'4rem',  d:'4.7s',dl:'2s'  },
+    {e:'🦖',t:'78%',r:'3%',  s:'4.5rem',d:'3.5s',dl:'0.4s'},
+    {e:'🦕',t:'50%',r:'46%', s:'3rem',  d:'5.4s',dl:'1.7s'},
+    {e:'🦖',t:'22%',l:'23%', s:'3rem',  d:'4s',  dl:'2.5s'},
+    {e:'🦕',t:'58%',r:'22%', s:'3.5rem',d:'4.9s',dl:'0.9s'},
+  ];
+  items.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'dino';
+    el.textContent = p.e;
+    el.style.fontSize = p.s;
+    el.style.animationDuration = p.d;
+    el.style.animationDelay   = p.dl;
+    el.style.top = p.t;
+    if (p.l) el.style.left  = p.l;
+    if (p.r) el.style.right = p.r;
+    bg.appendChild(el);
+  });
+})();
+
+/* ── アナログ時計 ── */
+const canvas = document.getElementById('clockCanvas');
+const ctx    = canvas.getContext('2d');
+
+function resizeClock() {
+  const panel = document.getElementById('clockPanel');
+  const w = panel.clientWidth;
+  const h = panel.clientHeight;
+  if (w < 50 || h < 50) return;
+  const label   = panel.querySelector('.clock-label');
+  const digital = document.getElementById('digital');
+  const usedH = (label ? label.offsetHeight : 30) + (digital ? digital.offsetHeight : 50) + 40;
+  const size = Math.max(80, Math.min(w - 20, h - usedH, 520));
+  if (canvas.width === size) return;
+  canvas.width  = size;
+  canvas.height = size;
+}
+
+function drawHand(angle, len, width, color) {
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const pc  = Math.cos(angle + Math.PI / 2), ps = Math.sin(angle + Math.PI / 2);
+  const hw  = width / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 3;
+  ctx.beginPath();
+  ctx.moveTo(pc * hw, ps * hw);
+  ctx.lineTo(cos * len + pc * (width * .14), sin * len + ps * (width * .14));
+  ctx.lineTo(cos * len, sin * len);
+  ctx.lineTo(cos * len - pc * (width * .14), sin * len - ps * (width * .14));
+  ctx.lineTo(-pc * hw, -ps * hw);
+  ctx.lineTo(-cos * width * .1, -sin * width * .1);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawClock() {
+  const size = canvas.width;
+  if (size < 10) return;
+  const R = size / 2 * .92;
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.save();
+  ctx.translate(size / 2, size / 2);
+
+  const grad = ctx.createRadialGradient(0, -R * .15, R * .1, 0, 0, R);
+  grad.addColorStop(0, '#FFFEF5');
+  grad.addColorStop(1, '#FFF3E0');
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, 2 * Math.PI);
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = '#FF6D00'; ctx.lineWidth = Math.max(5, size * .018); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, R * .905, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,109,0,.15)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  for (let i = 0; i < 60; i++) {
+    const a  = (i / 60) * 2 * Math.PI - Math.PI / 2;
+    const isH = i % 5 === 0;
+    const r1 = R * .88, r2 = isH ? R * .73 : R * .83;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+    ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+    ctx.strokeStyle = isH ? '#475569' : '#CBD5E1';
+    ctx.lineWidth   = isH ? Math.max(3, size * .008) : 1.2;
+    ctx.lineCap = 'round'; ctx.stroke();
+  }
+
+  const numR  = R * .61;
+  const fSize = Math.max(16, size * .099);
+  const big   = new Set([12, 3, 6, 9]);
+  for (let n = 1; n <= 12; n++) {
+    const a = (n / 12) * 2 * Math.PI - Math.PI / 2;
+    const x = Math.cos(a) * numR, y = Math.sin(a) * numR;
+    ctx.beginPath(); ctx.arc(x, y, fSize * .64, 0, 2 * Math.PI);
+    ctx.fillStyle = big.has(n) ? 'rgba(255,109,0,.2)' : 'rgba(255,255,255,.75)';
+    ctx.fill();
+    ctx.font         = `900 ${fSize}px 'Hiragino Maru Gothic Pro','Noto Sans JP',sans-serif`;
+    ctx.fillStyle    = big.has(n) ? '#C2410C' : '#1E293B';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n, x, y);
+  }
+
+  const now = new Date();
+  const h  = now.getHours() % 12, m = now.getMinutes();
+  const s  = now.getSeconds(),    ms = now.getMilliseconds();
+  const sS = s + ms / 1000, mS = m + sS / 60, hS = h + mS / 60;
+
+  drawHand((hS / 12) * 2 * Math.PI - Math.PI / 2, R * .50, Math.max(8, size * .021), '#1E3A8A');
+  drawHand((mS / 60) * 2 * Math.PI - Math.PI / 2, R * .72, Math.max(6, size * .013), '#DC2626');
+
+  const sA = (sS / 60) * 2 * Math.PI - Math.PI / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 5;
+  ctx.strokeStyle = '#EA580C'; ctx.lineWidth = Math.max(2, size * .005); ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(sA + Math.PI) * R * .2, Math.sin(sA + Math.PI) * R * .2);
+  ctx.lineTo(Math.cos(sA) * R * .84, Math.sin(sA) * R * .84);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.beginPath(); ctx.arc(0, 0, Math.max(8, size * .025), 0, 2 * Math.PI);
+  ctx.fillStyle = '#EA580C'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, Math.max(4, size * .012), 0, 2 * Math.PI);
+  ctx.fillStyle = 'white'; ctx.fill();
+
+  ctx.restore();
+
+  const HH = now.getHours().toString().padStart(2, '0');
+  const MM  = m.toString().padStart(2, '0');
+  document.getElementById('digital').textContent = `${HH}:${MM}`;
+}
+
+function tick() { drawClock(); requestAnimationFrame(tick); }
+
+/* ── タスク ── */
+function tap(btn) {
+  const completing = !btn.classList.contains('done');
+  btn.classList.toggle('done');
+  if (completing) {
+    btn.classList.remove('popping');
+    void btn.offsetWidth;
+    btn.classList.add('popping');
+    btn.addEventListener('animationend', () => btn.classList.remove('popping'), { once: true });
+    if (navigator.vibrate) navigator.vibrate([30, 10, 45]);
+  }
+  checkAll();
+}
+
+function checkAll() {
+  const all  = document.querySelectorAll('.task');
+  const done = document.querySelectorAll('.task.done');
+  const cel  = document.getElementById('celeb');
+  if (all.length === done.length) {
+    cel.style.display = 'block';
+    confetti();
+  } else {
+    cel.style.display = 'none';
+  }
+}
+
+function resetAll() {
+  document.querySelectorAll('.task.done').forEach(b => b.classList.remove('done'));
+  document.getElementById('celeb').style.display = 'none';
+}
+
+/* ── コンフェッティ ── */
+function confetti() {
+  const cols = ['#22C55E','#3B82F6','#F59E0B','#EC4899','#8B5CF6','#EF4444','#06B6D4','#FBBF24'];
+  for (let i = 0; i < 90; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'cf';
+      const w = 8 + Math.random() * 10, h = 8 + Math.random() * 13;
+      el.style.cssText = `
+        left:${Math.random() * 100}vw;
+        width:${w}px; height:${h}px;
+        background:${cols[Math.floor(Math.random() * cols.length)]};
+        animation-duration:${1.5 + Math.random() * 2}s;
+        border-radius:${Math.random() > .5 ? '50%' : '3px'};
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3800);
+    }, i * 22);
+  }
+}
+
+/* ── 初期化 ── */
+if (window.ResizeObserver) {
+  new ResizeObserver(resizeClock).observe(document.getElementById('clockPanel'));
+}
+
+let _polls = 0;
+function pollResize() {
+  resizeClock();
+  if (canvas.width < 80 && ++_polls < 40) setTimeout(pollResize, 200);
+}
+
+window.addEventListener('load', () => { pollResize(); tick(); });
+window.addEventListener('resize', resizeClock);
+</script>
 </body>
 </html>

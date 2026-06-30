@@ -188,6 +188,78 @@
       100% { opacity:0; transform:translateY(110vh) rotate(900deg); }
     }
     .cf { position:fixed; pointer-events:none; animation:cfFall linear forwards; z-index:9999; }
+
+    /* ── ティラノサウルス演出 ── */
+    #trexOverlay {
+      position:fixed;inset:0;z-index:99999;
+      background:rgba(0,0,0,0.88);
+      display:flex;align-items:flex-end;justify-content:center;
+      cursor:pointer;overflow:hidden;
+    }
+    #trexOverlay.shake { animation:trexShake 0.1s ease infinite; }
+    @keyframes trexShake {
+      0%,100%{transform:translate(0,0) rotate(0)}
+      25%{transform:translate(-5px,3px) rotate(-0.3deg)}
+      75%{transform:translate(5px,-3px) rotate(0.3deg)}
+    }
+    #trexBgGlow {
+      position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse at 60% 85%,rgba(255,70,0,0.3) 0%,transparent 65%);
+      animation:glowPulse 0.45s ease infinite alternate;
+    }
+    @keyframes glowPulse { from{opacity:0.4} to{opacity:1} }
+    #trexSvgWrap {
+      position:relative;flex-shrink:0;
+      width:min(94vw,540px);
+      filter:drop-shadow(0 0 30px rgba(255,90,0,0.55));
+      animation:trexRise 0.65s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    @keyframes trexRise {
+      from{transform:translateY(108%)} to{transform:translateY(0)}
+    }
+    #trexJaw {
+      transform-box:fill-box;
+      transform-origin:5% 30%;
+      animation:jawDrop 0.45s 0.55s ease forwards, jawRoar 0.22s 1s ease infinite alternate;
+    }
+    @keyframes jawDrop { from{transform:rotate(0)} to{transform:rotate(20deg)} }
+    @keyframes jawRoar { from{transform:rotate(18deg)} to{transform:rotate(25deg)} }
+    #roarLabel {
+      position:absolute;top:10%;left:50%;
+      white-space:nowrap;
+      font-size:clamp(2.5rem,9vw,6rem);font-weight:900;
+      font-family:Impact,'Arial Black',sans-serif;letter-spacing:5px;
+      color:#ff3300;
+      opacity:0;
+      animation:roarBoom 0.3s 0.75s cubic-bezier(0.175,0.885,0.32,1.275) forwards,
+                roarFlicker 0.18s 1.05s ease infinite alternate;
+      transform:translateX(-50%);
+    }
+    @keyframes roarBoom {
+      0%{opacity:0;transform:translateX(-50%) scale(0.15)}
+      100%{opacity:1;transform:translateX(-50%) scale(1)}
+    }
+    @keyframes roarFlicker {
+      from{text-shadow:0 0 20px rgba(255,80,0,0.9),0 0 50px rgba(255,50,0,0.6)}
+      to{text-shadow:0 0 45px rgba(255,110,0,1),0 0 90px rgba(255,40,0,0.9),0 0 130px rgba(255,0,0,0.4)}
+    }
+    .trexDust {
+      position:absolute;bottom:2%;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(200,150,60,0.6),rgba(160,110,40,0.2));
+      pointer-events:none;
+      animation:dustPuff 1.4s ease-out forwards;
+    }
+    @keyframes dustPuff {
+      0%{opacity:1;transform:scale(0.1) translateY(0)}
+      100%{opacity:0;transform:scale(5) translateY(-30px)}
+    }
+    #trexTapHint {
+      position:absolute;bottom:3%;left:50%;transform:translateX(-50%);
+      color:rgba(255,255,255,0.45);font-size:clamp(0.75rem,2vw,1rem);
+      white-space:nowrap;opacity:0;animation:hintIn 0.5s 2.2s ease forwards;
+    }
+    @keyframes hintIn { to{opacity:1} }
   </style>
 </head>
 <body>
@@ -430,6 +502,7 @@ function checkAll() {
   if (all.length === done.length) {
     cel.style.display = 'block';
     confetti();
+    setTimeout(showTRex, 800);
   } else {
     cel.style.display = 'none';
   }
@@ -459,6 +532,141 @@ function confetti() {
       setTimeout(() => el.remove(), 3800);
     }, i * 22);
   }
+}
+
+/* ── ティラノサウルス演出 ── */
+function showTRex() {
+  if (document.getElementById('trexOverlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'trexOverlay';
+  ov.innerHTML = `
+    <div id="trexBgGlow"></div>
+    <div id="roarLabel">ROOOAAARR!!</div>
+    <div id="trexSvgWrap">
+      <svg viewBox="0 0 560 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+        <ellipse cx="265" cy="448" rx="155" ry="12" fill="rgba(0,0,0,0.45)"/>
+        <path d="M 118,252 Q 68,238 28,256 Q 48,282 88,274 Q 114,265 138,258 Z" fill="#3e6e2b"/>
+        <path d="M 126,250 Q 82,240 46,256 Q 64,272 98,266 Q 122,258 140,254 Z" fill="#4d7e35"/>
+        <ellipse cx="255" cy="248" rx="132" ry="78" fill="#4d7e35" transform="rotate(-8 255 248)"/>
+        <ellipse cx="238" cy="222" rx="78" ry="44" fill="#5e9640" opacity="0.35" transform="rotate(-8 238 222)"/>
+        <path d="M 148,268 Q 190,318 248,330 Q 278,334 284,320 Q 258,288 224,263 Q 196,250 166,254 Z" fill="#72b04c" opacity="0.55"/>
+        <path d="M 142,218 Q 138,202 149,197 Q 155,208 152,220 Z" fill="#5a9038"/>
+        <path d="M 168,206 Q 166,190 177,185 Q 182,198 177,208 Z" fill="#5a9038"/>
+        <path d="M 198,196 Q 197,180 209,176 Q 212,190 207,200 Z" fill="#5a9038"/>
+        <path d="M 232,191 Q 231,175 243,172 Q 246,185 240,196 Z" fill="#5a9038"/>
+        <path d="M 267,190 Q 268,174 280,172 Q 282,185 276,196 Z" fill="#5a9038"/>
+        <path d="M 304,193 Q 306,177 318,177 Q 319,190 312,201 Z" fill="#5a9038"/>
+        <path d="M 336,200 Q 339,184 351,185 Q 351,198 344,208 Z" fill="#5a9038"/>
+        <path d="M 348,190 Q 374,152 396,140 Q 386,176 360,206 Z" fill="#4d7e35"/>
+        <path d="M 375,152 Q 418,115 474,124 Q 508,134 502,160 Q 475,172 436,166 Q 406,160 375,152 Z" fill="#4d7e35"/>
+        <path d="M 385,146 Q 425,112 470,122 Q 498,132 492,152 Q 468,162 432,156 Q 406,150 385,146 Z" fill="#5e9640" opacity="0.35"/>
+        <g id="trexJaw">
+          <path d="M 390,168 Q 438,173 500,164 Q 513,182 498,198 Q 454,210 406,198 Q 390,190 390,168 Z" fill="#3e6e2b"/>
+          <path d="M 416,188 Q 452,200 484,191 Q 468,214 451,218 Q 433,213 416,188 Z" fill="#cc4466" opacity="0.92"/>
+          <path d="M 438,192 Q 455,197 470,192" stroke="rgba(255,180,180,0.4)" stroke-width="2" fill="none"/>
+          <path d="M 406,172 L 411,156 L 417,172 Z" fill="#efe8cc"/>
+          <path d="M 424,174 L 429,157 L 436,174 Z" fill="#efe8cc"/>
+          <path d="M 445,174 L 450,158 L 457,174 Z" fill="#efe8cc"/>
+          <path d="M 464,173 L 468,158 L 474,173 Z" fill="#efe8cc"/>
+          <path d="M 480,170 L 484,156 L 489,170 Z" fill="#efe8cc"/>
+        </g>
+        <path d="M 402,167 L 408,183 L 415,167 Z" fill="#f0ead0"/>
+        <path d="M 420,168 L 426,185 L 433,168 Z" fill="#f0ead0"/>
+        <path d="M 441,167 L 446,183 L 452,167 Z" fill="#f0ead0"/>
+        <path d="M 460,166 L 465,181 L 470,166 Z" fill="#f0ead0"/>
+        <path d="M 478,165 L 482,179 L 487,165 Z" fill="#f0ead0"/>
+        <path d="M 398,168 Q 445,172 504,163" stroke="rgba(180,50,50,0.4)" stroke-width="3" fill="none"/>
+        <circle cx="462" cy="137" r="13" fill="#0f0f00"/>
+        <circle cx="466" cy="134" r="6" fill="white"/>
+        <circle cx="468" cy="133" r="3.5" fill="#cccc00"/>
+        <circle cx="470" cy="132" r="2" fill="#0f0f00"/>
+        <circle cx="472" cy="130" r="1.8" fill="white" opacity="0.8"/>
+        <path d="M 448,127 Q 462,122 476,126" stroke="#2a4d1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="494" cy="150" rx="4.5" ry="3" fill="#2d541e" transform="rotate(-18 494 150)"/>
+        <path d="M 175,300 Q 163,350 150,383 Q 143,400 149,410 Q 161,418 175,410 Q 184,402 188,388 Q 202,358 208,328 Q 212,312 206,300 Z" fill="#3e6e2b"/>
+        <path d="M 176,299 Q 170,338 163,362 Q 176,352 196,326 Q 203,311 198,299 Z" fill="#4d7e35" opacity="0.5"/>
+        <path d="M 143,406 Q 128,414 124,428 Q 135,432 145,424" fill="#3e6e2b"/>
+        <path d="M 158,411 Q 148,422 150,434 Q 160,436 164,426" fill="#3e6e2b"/>
+        <path d="M 171,411 Q 165,422 168,434 Q 177,433 178,422" fill="#3e6e2b"/>
+        <path d="M 120,428 L 111,437" stroke="#2a4d1a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 141,432 L 134,441" stroke="#2a4d1a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 161,434 L 156,443" stroke="#2a4d1a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 178,422 L 178,434" stroke="#2a4d1a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 218,308 Q 232,350 244,380 Q 248,397 244,410 Q 254,420 267,413 Q 274,403 270,390 Q 260,366 251,340 Q 243,318 238,308 Z" fill="#3a6828"/>
+        <path d="M 232,403 Q 222,413 225,426 Q 234,430 240,421" fill="#3a6828"/>
+        <path d="M 248,408 Q 242,419 246,431 Q 255,431 256,421" fill="#3a6828"/>
+        <path d="M 260,408 Q 257,419 262,430 Q 269,427 269,417" fill="#3a6828"/>
+        <path d="M 336,218 Q 320,232 312,242 Q 318,249 327,244 Q 338,234 345,222 Z" fill="#3e6e2b"/>
+        <path d="M 311,243 L 304,251" stroke="#2a4d1a" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 319,247 L 314,256" stroke="#2a4d1a" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 328,247 L 325,256" stroke="#2a4d1a" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 198,234 Q 218,247 238,243" stroke="#3a6828" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <path d="M 213,254 Q 232,264 253,261" stroke="#3a6828" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <path d="M 288,242 Q 308,248 322,244" stroke="#3a6828" stroke-width="1.5" fill="none" opacity="0.45"/>
+        <circle cx="228" cy="228" r="3" fill="#3a6828" opacity="0.4"/>
+        <circle cx="268" cy="229" r="3" fill="#3a6828" opacity="0.4"/>
+        <circle cx="244" cy="244" r="2.5" fill="#3a6828" opacity="0.35"/>
+        <path d="M 195,446 L 175,456 M 195,446 L 206,458 M 195,446 L 190,460" stroke="#666" stroke-width="1.5" opacity="0.4" fill="none"/>
+        <path d="M 285,446 L 270,455 M 285,446 L 296,458" stroke="#666" stroke-width="1.5" opacity="0.4" fill="none"/>
+      </svg>
+    </div>
+    <div id="trexTapHint">タップで閉じる</div>
+  `;
+  document.body.appendChild(ov);
+
+  ov.classList.add('shake');
+  setTimeout(() => ov.classList.remove('shake'), 1800);
+
+  setTimeout(() => {
+    [[30, 55], [50, 65], [18, 48], [68, 52]].forEach(([lp, sz], i) => {
+      const dust = document.createElement('div');
+      dust.className = 'trexDust';
+      dust.style.cssText = `left:${lp}%;width:${sz}px;height:${sz}px;animation-delay:${i*0.13}s`;
+      ov.appendChild(dust);
+    });
+  }, 500);
+
+  function playRoar() {
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const dur = 2.8, sr = ac.sampleRate;
+      const buf = ac.createBuffer(1, sr * dur, sr);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) {
+        const t = i / sr;
+        const env = Math.min(1, t * 6) * Math.pow(Math.max(0, 1 - t / dur), 0.4);
+        const f = 55 + t * 25;
+        const vib = Math.sin(2 * Math.PI * 7 * t) * 0.018;
+        d[i] = (
+          Math.sin(2 * Math.PI * f * (1 + vib) * t) * 0.38 +
+          Math.sin(2 * Math.PI * f * 1.48 * t) * 0.22 +
+          Math.sin(2 * Math.PI * f * 2.02 * t) * 0.14 +
+          Math.sin(2 * Math.PI * 190 * t) * 0.08 +
+          (Math.random() - 0.5) * 0.14
+        ) * env * 0.75;
+      }
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      const lp = ac.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 380;
+      const g = ac.createGain(); g.gain.value = 1.4;
+      src.connect(lp); lp.connect(g); g.connect(ac.destination);
+      src.start();
+    } catch(e) {}
+  }
+  playRoar();
+
+  setTimeout(() => {
+    ov.style.transition = 'opacity 0.8s';
+    ov.style.opacity = '0';
+    setTimeout(() => ov.remove(), 800);
+  }, 4500);
+
+  ov.addEventListener('click', () => {
+    ov.style.transition = 'opacity 0.3s';
+    ov.style.opacity = '0';
+    setTimeout(() => ov.remove(), 300);
+  });
 }
 
 /* ── 時刻読み上げ ── */

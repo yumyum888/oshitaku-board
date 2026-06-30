@@ -457,7 +457,7 @@ function confetti() {
 function speakTime() {
   const now = new Date();
   const h24 = now.getHours();
-  const m = now.getMinutes();
+  const m   = now.getMinutes();
   const h12 = h24 % 12 || 12;
 
   let timeOfDay;
@@ -466,12 +466,28 @@ function speakTime() {
   else if (h24 >= 16 && h24 <= 17) timeOfDay = 'ゆうがた';
   else                              timeOfDay = 'よる';
 
-  const text = m === 0
-    ? `${timeOfDay} ${h12}じ だよ`
-    : `${timeOfDay} ${h12}じ ${m}ふん だよ`;
+  const HOUR = {
+    1:'いちじ', 2:'にじ', 3:'さんじ', 4:'よじ', 5:'ごじ', 6:'ろくじ',
+    7:'しちじ', 8:'はちじ', 9:'くじ', 10:'じゅうじ', 11:'じゅういちじ', 12:'じゅうにじ'
+  };
+
+  function minKana(n) {
+    if (n === 0) return '';
+    const t = Math.floor(n / 10), o = n % 10;
+    const tk  = ['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう'];
+    const tk0 = ['','じゅっ', 'にじゅっ', 'さんじゅっ', 'よんじゅっ', 'ごじゅっ'];
+    const ok  = ['','いっぷん','にふん','さんぷん','よんぷん','ごふん','ろっぷん','ななふん','はっぷん','きゅうふん'];
+    return o === 0 ? tk0[t] + 'ぷん' : tk[t] + ok[o];
+  }
+
+  const mKana = minKana(m);
+  const text  = mKana
+    ? `${timeOfDay}、${HOUR[h12]}${mKana}だよ`
+    : `${timeOfDay}、${HOUR[h12]}だよ`;
 
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
+  utter.rate = 0.9;
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }

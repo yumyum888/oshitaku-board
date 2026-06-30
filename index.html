@@ -490,7 +490,7 @@ function speakTime() {
 
   const mKana = minKana(m);
   const text  = mKana
-    ? `${timeOfDay}、${HOUR[h12]}${mKana}だよ`
+    ? `${timeOfDay}、${HOUR[h12]}、${mKana}だよ`
     : `${timeOfDay}、${HOUR[h12]}だよ`;
 
   const utter = new SpeechSynthesisUtterance(text);

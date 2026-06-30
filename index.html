@@ -193,6 +193,7 @@
 <body>
 
 <div id="dinoBg"></div>
+<div id="cfContainer" style="position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;"></div>
 
 <div class="wrap">
 
@@ -446,7 +447,7 @@ function confetti() {
         animation-duration:${1.5 + Math.random() * 2}s;
         border-radius:${Math.random() > .5 ? '50%' : '3px'};
       `;
-      document.body.appendChild(el);
+      document.getElementById('cfContainer').appendChild(el);
       setTimeout(() => el.remove(), 3800);
     }, i * 22);
   }

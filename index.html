@@ -456,10 +456,20 @@ function confetti() {
 /* ── 時刻読み上げ ── */
 function speakTime() {
   const now = new Date();
-  const h = now.getHours();
+  const h24 = now.getHours();
   const m = now.getMinutes();
-  const mText = m === 0 ? 'ちょうど' : m + 'ふん';
-  const text = `いまは ${h}じ ${mText} です`;
+  const h12 = h24 % 12 || 12;
+
+  let timeOfDay;
+  if (h24 >= 4 && h24 <= 10)       timeOfDay = 'あさ';
+  else if (h24 >= 11 && h24 <= 15) timeOfDay = 'おひる';
+  else if (h24 >= 16 && h24 <= 17) timeOfDay = 'ゆうがた';
+  else                              timeOfDay = 'よる';
+
+  const text = m === 0
+    ? `${timeOfDay} ${h12}じ だよ`
+    : `${timeOfDay} ${h12}じ ${m}ふん だよ`;
+
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
   speechSynthesis.cancel();

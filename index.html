@@ -174,7 +174,7 @@
     #clockCanvas { flex-shrink:0; display:block; }
 
     .digital {
-      font-size:clamp(1.8rem,4.5vw,4rem);
+      font-size:clamp(1rem,2.8vw,2.2rem);
       font-weight:900; color:#1E3A8A; letter-spacing:4px;
       background:rgba(255,255,255,.8); padding:4px 18px;
       border-radius:14px; box-shadow:0 3px 10px rgba(0,0,0,.08);
@@ -394,9 +394,17 @@ function drawClock() {
 
   ctx.restore();
 
-  const HH = now.getHours().toString().padStart(2, '0');
-  const MM  = m.toString().padStart(2, '0');
-  document.getElementById('digital').textContent = `${HH}:${MM}`;
+  const h24d = now.getHours();
+  const h12d = h24d % 12 || 12;
+  let tod;
+  if (h24d >= 4 && h24d <= 10)       tod = 'あさ';
+  else if (h24d >= 11 && h24d <= 15) tod = 'おひる';
+  else if (h24d >= 16 && h24d <= 17) tod = 'ゆうがた';
+  else                                tod = 'よる';
+  const digitalText = m === 0
+    ? `${tod} ${h12d}じ`
+    : `${tod} ${h12d}じ ${m}ふん`;
+  document.getElementById('digital').textContent = digitalText;
 }
 
 function tick() { drawClock(); requestAnimationFrame(tick); }

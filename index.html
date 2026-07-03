@@ -53,6 +53,27 @@
       font-weight:900; color:#1E293B;
     }
 
+    /* あさ／よる 切り替えボタン */
+    .mode-toggle { display:flex; gap:6px; margin-bottom:8px; flex-shrink:0; }
+    .mode-btn {
+      flex:1; padding:7px 8px; border-radius:14px;
+      border:2px solid #E2E8F0; background:rgba(255,255,255,.75);
+      color:#64748B; font-weight:800; font-family:inherit;
+      font-size:clamp(.85rem,1.7vw,1.1rem);
+      cursor:pointer; touch-action:manipulation;
+      transition:all .3s;
+    }
+    .mode-btn.active.mode-morning {
+      background:linear-gradient(135deg,#FFD54F,#FF8F00);
+      border-color:#FF8F00; color:#7C2D12;
+      box-shadow:0 3px 10px rgba(255,143,0,.35);
+    }
+    .mode-btn.active.mode-evening {
+      background:linear-gradient(135deg,#4C5B84,#1E293B);
+      border-color:#1E293B; color:white;
+      box-shadow:0 3px 10px rgba(30,41,59,.35);
+    }
+
     .tasks { flex:1; display:flex; flex-direction:column; gap:6px; overflow-y:auto; min-height:0; }
 
     /* ── タスクボタン（タップ前：白） ── */
@@ -83,6 +104,17 @@
     .c-teeth  .stripe { background:linear-gradient(180deg,#4DD0E1,#00838F); }
     .c-clean  .stripe { background:linear-gradient(180deg,#81C784,#2E7D32); }
     .c-bed    .stripe { background:linear-gradient(180deg,#7986CB,#283593); }
+
+    /* あさVer 用ストライプ色 */
+    .m-wake      .stripe { background:linear-gradient(180deg,#FFD54F,#FF8F00); }
+    .m-gargle    .stripe { background:linear-gradient(180deg,#4FC3F7,#0288D1); }
+    .m-meal      .stripe { background:linear-gradient(180deg,#FFA726,#EF6C00); }
+    .m-clothes   .stripe { background:linear-gradient(180deg,#F06292,#AD1457); }
+    .m-teeth     .stripe { background:linear-gradient(180deg,#4DD0E1,#00838F); }
+    .m-bag       .stripe { background:linear-gradient(180deg,#BA68C8,#6A1B9A); }
+    .m-sunscreen .stripe { background:linear-gradient(180deg,#81C784,#2E7D32); }
+    .m-socks     .stripe { background:linear-gradient(180deg,#7986CB,#283593); }
+    .m-go        .stripe { background:linear-gradient(180deg,#EF5350,#C62828); }
 
     .t-icon { font-size:clamp(1.6rem,3vw,2.5rem); margin-right:10px; flex-shrink:0; line-height:1; }
 
@@ -273,12 +305,65 @@
   <!-- ===== 左：タスク ===== -->
   <div class="left">
     <div class="board-header">
-      <span style="font-size:1.7rem">🦕</span>
-      <h1 class="board-title">やることりすと</h1>
-      <span style="font-size:1.7rem">🦖</span>
+      <span style="font-size:1.7rem" id="boardIconL">🦕</span>
+      <h1 class="board-title" id="boardTitle">よるの やることりすと</h1>
+      <span style="font-size:1.7rem" id="boardIconR">🦖</span>
     </div>
 
-    <div class="tasks">
+    <div class="mode-toggle">
+      <button class="mode-btn mode-morning" id="modeMorningBtn" onclick="switchMode('morning')">🌅 あさ</button>
+      <button class="mode-btn mode-evening" id="modeEveningBtn" onclick="switchMode('evening')">🌙 よる</button>
+    </div>
+
+    <div class="tasks" id="tasksMorning" style="display:none">
+      <button class="task m-wake"      onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🌅</span>
+        <span class="t-name">おきる</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-gargle"    onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🚰</span>
+        <span class="t-name">うがい</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-meal"      onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🍳</span>
+        <span class="t-name">あさごはん</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-clothes"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">👕</span>
+        <span class="t-name">おきがえ</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-teeth"     onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🦷</span>
+        <span class="t-name">はみがき</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-bag"       onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🎒</span>
+        <span class="t-name">ほいくえんのようい</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-sunscreen" onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🧴</span>
+        <span class="t-name">ひやけどめをぬる</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-socks"     onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🧦</span>
+        <span class="t-name">くつしたをはく</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-go"        onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🚗</span>
+        <span class="t-name">しゅっぱつ！</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+    </div>
+
+    <div class="tasks" id="tasksEvening">
       <button class="task c-bath"   onclick="tap(this)">
         <div class="stripe"></div><span class="t-icon">🛁</span>
         <span class="t-name">おふろ</span>
@@ -487,6 +572,26 @@ function drawClock() {
 
 function tick() { drawClock(); requestAnimationFrame(tick); }
 
+/* ── あさ／よる 切り替え ── */
+let currentMode = 'evening';
+
+function activeTasksEl() {
+  return document.getElementById(currentMode === 'morning' ? 'tasksMorning' : 'tasksEvening');
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  const isMorning = mode === 'morning';
+  document.getElementById('tasksMorning').style.display = isMorning ? 'flex' : 'none';
+  document.getElementById('tasksEvening').style.display = isMorning ? 'none' : 'flex';
+  document.getElementById('modeMorningBtn').classList.toggle('active', isMorning);
+  document.getElementById('modeEveningBtn').classList.toggle('active', !isMorning);
+  document.getElementById('boardTitle').textContent = isMorning ? 'あさの やることりすと' : 'よるの やることりすと';
+  document.getElementById('boardIconL').textContent = isMorning ? '🌞' : '🦕';
+  document.getElementById('boardIconR').textContent = isMorning ? '☀️' : '🦖';
+  checkAll();
+}
+
 /* ── タスク ── */
 function tap(btn) {
   const completing = !btn.classList.contains('done');
@@ -502,8 +607,9 @@ function tap(btn) {
 }
 
 function checkAll() {
-  const all  = document.querySelectorAll('.task');
-  const done = document.querySelectorAll('.task.done');
+  const container = activeTasksEl();
+  const all  = container.querySelectorAll('.task');
+  const done = container.querySelectorAll('.task.done');
   const cel  = document.getElementById('celeb');
   if (all.length === done.length) {
     cel.style.display = 'block';
@@ -515,7 +621,7 @@ function checkAll() {
 }
 
 function resetAll() {
-  document.querySelectorAll('.task.done').forEach(b => b.classList.remove('done'));
+  activeTasksEl().querySelectorAll('.task.done').forEach(b => b.classList.remove('done'));
   document.getElementById('celeb').style.display = 'none';
 }
 
@@ -725,7 +831,11 @@ function pollResize() {
   if (canvas.width < 80 && ++_polls < 40) setTimeout(pollResize, 200);
 }
 
-window.addEventListener('load', () => { pollResize(); tick(); });
+window.addEventListener('load', () => {
+  const h = new Date().getHours();
+  switchMode(h >= 4 && h < 11 ? 'morning' : 'evening');
+  pollResize(); tick();
+});
 window.addEventListener('resize', resizeClock);
 </script>
 </body>

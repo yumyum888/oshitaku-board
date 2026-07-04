@@ -980,8 +980,8 @@ function speakTime() {
   else                              timeOfDay = '夜';
 
   const text = m === 0
-    ? `${timeOfDay}の${h12}時だよ`
-    : `${timeOfDay}の${h12}時${m}分だよ`;
+    ? `${timeOfDay}、${h12}時だよ`
+    : `${timeOfDay}、${h12}時${m}分だよ`;
 
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';

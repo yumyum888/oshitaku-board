@@ -949,6 +949,24 @@ function showElasmosaurus() {
 }
 
 /* ── 時刻読み上げ ── */
+/* ひらがなベタ書きだと音声エンジンがアクセントを推定できず不自然になるため、
+   漢字まじりの文を渡し、端末にある中で最も自然な日本語音声を選ぶ */
+let jpVoice = null;
+function pickJapaneseVoice() {
+  const voices = speechSynthesis.getVoices().filter(v => v.lang && v.lang.replace('_','-').startsWith('ja'));
+  if (!voices.length) return null;
+  const rank = v =>
+    /Google/i.test(v.name)              ? 0 :  // Google 日本語（Chrome、最も自然）
+    /Siri/i.test(v.name)                ? 1 :
+    /Enhanced|拡張/i.test(v.name)        ? 2 :
+    /Kyoko/i.test(v.name)               ? 3 : 4;
+  return voices.sort((a, b) => rank(a) - rank(b))[0];
+}
+if (window.speechSynthesis) {
+  speechSynthesis.onvoiceschanged = () => { jpVoice = pickJapaneseVoice(); };
+  jpVoice = pickJapaneseVoice();
+}
+
 function speakTime() {
   const now = new Date();
   const h24 = now.getHours();
@@ -956,33 +974,20 @@ function speakTime() {
   const h12 = h24 % 12 || 12;
 
   let timeOfDay;
-  if (h24 >= 4 && h24 <= 10)       timeOfDay = 'あさ';
-  else if (h24 >= 11 && h24 <= 15) timeOfDay = 'おひる';
-  else if (h24 >= 16 && h24 <= 17) timeOfDay = 'ゆうがた';
-  else                              timeOfDay = 'よる';
+  if (h24 >= 4 && h24 <= 10)       timeOfDay = '朝';
+  else if (h24 >= 11 && h24 <= 15) timeOfDay = 'お昼';
+  else if (h24 >= 16 && h24 <= 17) timeOfDay = '夕方';
+  else                              timeOfDay = '夜';
 
-  const HOUR = {
-    1:'いちじ', 2:'にじ', 3:'さんじ', 4:'よじ', 5:'ごじ', 6:'ろくじ',
-    7:'しちじ', 8:'はちじ', 9:'くじ', 10:'じゅうじ', 11:'じゅういちじ', 12:'じゅうにじ'
-  };
-
-  function minKana(n) {
-    if (n === 0) return '';
-    const t = Math.floor(n / 10), o = n % 10;
-    const tk  = ['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう'];
-    const tk0 = ['','じゅっ', 'にじゅっ', 'さんじゅっ', 'よんじゅっ', 'ごじゅっ'];
-    const ok  = ['','いっぷん','にふん','さんぷん','よんぷん','ごふん','ろっぷん','ななふん','はっぷん','きゅうふん'];
-    return o === 0 ? tk0[t] + 'ぷん' : tk[t] + ok[o];
-  }
-
-  const mKana = minKana(m);
-  const text  = mKana
-    ? `${timeOfDay}、${HOUR[h12]}、${mKana}だよ`
-    : `${timeOfDay}、${HOUR[h12]}だよ`;
+  const text = m === 0
+    ? `${timeOfDay}の${h12}時だよ`
+    : `${timeOfDay}の${h12}時${m}分だよ`;
 
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
-  utter.rate = 0.9;
+  if (!jpVoice) jpVoice = pickJapaneseVoice();
+  if (jpVoice) utter.voice = jpVoice;
+  utter.rate = 1.0;
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }

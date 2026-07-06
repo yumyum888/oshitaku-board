@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="子どものお支度・生活習慣を楽しくサポートするお支度ボードアプリ。タップで「できた！」、時計の読み上げつき。あさとよるのやることりすと。">
   <title>🦖 やることりすと 🦕</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -16,7 +15,6 @@
       background: linear-gradient(135deg, #F0F4FF 0%, #FFF7ED 100%);
       user-select: none; -webkit-user-select: none;
     }
-    input, textarea { user-select: text; -webkit-user-select: text; }
 
     /* 背景の恐竜 */
     #dinoBg { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
@@ -90,15 +88,33 @@
       box-shadow:0 2px 6px rgba(0,0,0,.07);
       overflow:hidden; position:relative;
       transition:border-color .35s, box-shadow .35s, background .4s;
-      font-family:inherit;
     }
 
-    /* 左の色ストライプ（色はJSからインライン指定） */
+    /* 左の色ストライプ */
     .stripe {
       width:9px; height:100%; flex-shrink:0;
       align-self:stretch; margin-right:12px;
       transition:background .4s;
     }
+    .c-bath   .stripe { background:linear-gradient(180deg,#60B5F5,#1E88E5); }
+    .c-meal   .stripe { background:linear-gradient(180deg,#FFA726,#EF6C00); }
+    .c-water  .stripe { background:linear-gradient(180deg,#FFCA28,#F57F17); }
+    .c-yogurt .stripe { background:linear-gradient(180deg,#F06292,#AD1457); }
+    .c-moku   .stripe { background:linear-gradient(180deg,#BA68C8,#6A1B9A); }
+    .c-teeth  .stripe { background:linear-gradient(180deg,#4DD0E1,#00838F); }
+    .c-clean  .stripe { background:linear-gradient(180deg,#81C784,#2E7D32); }
+    .c-bed    .stripe { background:linear-gradient(180deg,#7986CB,#283593); }
+
+    /* あさVer 用ストライプ色 */
+    .m-wake      .stripe { background:linear-gradient(180deg,#FFD54F,#FF8F00); }
+    .m-gargle    .stripe { background:linear-gradient(180deg,#4FC3F7,#0288D1); }
+    .m-meal      .stripe { background:linear-gradient(180deg,#FFA726,#EF6C00); }
+    .m-clothes   .stripe { background:linear-gradient(180deg,#F06292,#AD1457); }
+    .m-teeth     .stripe { background:linear-gradient(180deg,#4DD0E1,#00838F); }
+    .m-bag       .stripe { background:linear-gradient(180deg,#BA68C8,#6A1B9A); }
+    .m-sunscreen .stripe { background:linear-gradient(180deg,#81C784,#2E7D32); }
+    .m-socks     .stripe { background:linear-gradient(180deg,#7986CB,#283593); }
+    .m-go        .stripe { background:linear-gradient(180deg,#EF5350,#C62828); }
 
     .t-icon { font-size:clamp(1.6rem,3vw,2.5rem); margin-right:10px; flex-shrink:0; line-height:1; }
 
@@ -131,7 +147,7 @@
       border-color:#16A34A;
       box-shadow:0 5px 20px rgba(34,197,94,.38);
     }
-    .task.done .stripe  { background:rgba(255,255,255,.22) !important; }
+    .task.done .stripe  { background:rgba(255,255,255,.22); }
     .task.done .t-name  { color:white; }
     .task.done .t-circle {
       background:rgba(255,255,255,.28);
@@ -165,29 +181,14 @@
       to   { transform:scale(1.02); box-shadow:0 0 16px rgba(234,179,8,.5); }
     }
 
-    .tool-row { display:flex; gap:6px; align-items:stretch; }
-
     .reset-btn {
-      flex:1; padding:7px; border-radius:14px;
+      padding:7px; border-radius:14px;
       border:2px solid #E2E8F0; background:rgba(255,255,255,.7);
       color:#64748B; font-size:clamp(.75rem,1.4vw,.95rem);
       font-weight:700; cursor:pointer; font-family:inherit;
       touch-action:manipulation;
     }
     .reset-btn:active { opacity:.7; }
-
-    .tool-btn {
-      flex:0 0 auto; width:40px;
-      border-radius:14px; border:2px solid #E2E8F0;
-      background:rgba(255,255,255,.7); font-size:1rem;
-      cursor:pointer; touch-action:manipulation;
-    }
-    .tool-btn:active { opacity:.7; }
-
-    .legal-link {
-      text-align:center; font-size:.6rem; color:#A8B4C4;
-      text-decoration:none;
-    }
 
     /* ───── 右：時計 ───── */
     .right {
@@ -345,142 +346,6 @@
       color:rgba(255,255,255,0.45);font-size:clamp(0.75rem,2vw,1rem);
       white-space:nowrap;opacity:0;animation:hintIn 0.5s 1.8s ease forwards;
     }
-
-    /* ── 汎用完了演出（うちゅう・どうぶつテーマ） ── */
-    #genOverlay {
-      position:fixed;inset:0;z-index:99999;
-      display:flex;align-items:flex-end;justify-content:center;
-      cursor:pointer;overflow:hidden;
-    }
-    #genOverlay.shake { animation:trexShake 0.1s ease infinite; }
-    .gen-emoji {
-      font-size:clamp(9rem,42vw,20rem); line-height:1;
-      margin-bottom:6vh;
-      animation:trexRise 0.65s cubic-bezier(0.22,1,0.36,1) forwards;
-    }
-    .gen-label {
-      position:absolute;top:10%;left:50%;
-      white-space:nowrap;
-      font-size:clamp(2.2rem,8vw,5.5rem);font-weight:900;
-      font-family:Impact,'Arial Black',sans-serif;letter-spacing:4px;
-      opacity:0;
-      animation:roarBoom 0.3s 0.55s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
-      transform:translateX(-50%);
-    }
-
-    /* ── モーダル共通（大人向けUI） ── */
-    .olay {
-      position:fixed; inset:0; z-index:100000;
-      background:rgba(15,23,42,.55);
-      display:flex; align-items:center; justify-content:center;
-      padding:16px;
-    }
-    .olay[hidden] { display:none; }
-    .modal {
-      background:white; border-radius:22px; padding:22px 20px 18px;
-      width:min(92vw,480px); max-height:86vh; overflow-y:auto;
-      box-shadow:0 20px 60px rgba(0,0,0,.35); position:relative;
-    }
-    .modal h2 { font-size:1.15rem; color:#1E293B; margin-bottom:10px; padding-right:36px; }
-    .close-x {
-      position:absolute; top:12px; right:12px;
-      width:32px; height:32px; border:none;
-      background:#F1F5F9; border-radius:50%;
-      font-size:1rem; cursor:pointer; color:#475569;
-    }
-
-    /* プレミアムモーダル */
-    .pm-price { font-size:1.45rem; font-weight:900; color:#EA580C; margin:4px 0 8px; }
-    .pm-list { list-style:none; margin:0 0 14px; display:flex; flex-direction:column; gap:6px; }
-    .pm-list li {
-      background:#F8FAFC; border-radius:12px; padding:9px 11px;
-      font-size:.86rem; color:#334155; line-height:1.5;
-    }
-    .pm-buy {
-      width:100%; padding:13px; border:none; border-radius:14px;
-      background:linear-gradient(135deg,#635BFF,#4F46E5); color:white;
-      font-weight:800; font-size:1rem; cursor:pointer; font-family:inherit;
-    }
-    .pm-buy:disabled { background:#CBD5E1; cursor:default; }
-    .code-row { display:flex; gap:6px; margin-top:12px; }
-    .code-row input {
-      flex:1; min-width:0; padding:10px; border:2px solid #E2E8F0;
-      border-radius:12px; font-family:inherit; font-size:.95rem;
-    }
-    .code-row button {
-      padding:10px 16px; border:2px solid #E2E8F0; border-radius:12px;
-      background:#F8FAFC; font-weight:700; cursor:pointer; font-family:inherit; color:#334155;
-    }
-    #codeMsg { font-size:.8rem; margin-top:6px; min-height:1.2em; font-weight:700; }
-    .pm-legal { display:block; margin-top:14px; font-size:.7rem; color:#94A3B8; text-align:center; }
-
-    /* 編集モーダル */
-    .edit-tabs { display:flex; gap:6px; margin-bottom:12px; }
-    .edit-tab {
-      flex:1; padding:8px; border-radius:12px; border:2px solid #E2E8F0;
-      background:white; font-weight:800; cursor:pointer; font-family:inherit; color:#64748B;
-    }
-    .edit-tab.active { background:#1E293B; color:white; border-color:#1E293B; }
-    .edit-row { display:flex; gap:5px; align-items:center; margin-bottom:6px; }
-    .edit-row .mv {
-      width:30px; height:36px; border:1px solid #E2E8F0; background:#F8FAFC;
-      border-radius:9px; cursor:pointer; color:#475569; font-size:.7rem;
-    }
-    .edit-row .mv:disabled { opacity:.3; cursor:default; }
-    .edit-row .icon-pick {
-      width:42px; height:36px; font-size:1.15rem; border:2px solid #E2E8F0;
-      background:white; border-radius:9px; cursor:pointer;
-    }
-    .edit-row input {
-      flex:1; min-width:0; padding:7px 9px; border:2px solid #E2E8F0;
-      border-radius:9px; font-family:inherit; font-size:.9rem;
-    }
-    .edit-row .del {
-      width:36px; height:36px; border:none; background:#FEE2E2;
-      color:#B91C1C; border-radius:9px; cursor:pointer; font-size:.9rem;
-    }
-    .add-task-btn {
-      width:100%; padding:10px; border:2px dashed #CBD5E1; border-radius:12px;
-      background:transparent; color:#64748B; font-weight:700;
-      cursor:pointer; font-family:inherit; margin-top:4px;
-    }
-    .edit-actions { display:flex; gap:8px; margin-top:14px; }
-    .edit-actions button {
-      flex:1; padding:11px; border-radius:12px; font-weight:700;
-      cursor:pointer; font-family:inherit; font-size:.9rem;
-    }
-    #resetDefaultBtn { border:2px solid #E2E8F0; background:white; color:#64748B; }
-    #editCloseBtn { border:none; background:#1E293B; color:white; }
-
-    /* 絵文字ピッカー */
-    .emoji-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
-    .emoji-grid button {
-      font-size:1.5rem; padding:8px 0; border:2px solid #F1F5F9;
-      background:white; border-radius:12px; cursor:pointer;
-    }
-    .emoji-grid button:active { background:#F1F5F9; }
-
-    /* テーマピッカー */
-    .theme-grid { display:flex; flex-direction:column; gap:8px; }
-    .theme-card {
-      display:flex; align-items:center; gap:10px; padding:13px 14px;
-      border:2px solid #E2E8F0; border-radius:14px; background:white;
-      cursor:pointer; font-family:inherit; font-size:1rem;
-      font-weight:800; color:#334155; text-align:left;
-    }
-    .theme-card.active { border-color:#22C55E; background:#F0FDF4; }
-    .theme-card .th-emojis { font-size:1.5rem; }
-    .theme-card .lock { margin-left:auto; font-size:.78rem; color:#94A3B8; font-weight:700; }
-
-    /* トースト */
-    #toast {
-      position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
-      background:rgba(30,41,59,.92); color:white;
-      padding:10px 18px; border-radius:999px;
-      font-size:.85rem; font-weight:700; z-index:100001;
-      opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap;
-    }
-    #toast.show { opacity:1; }
   </style>
 </head>
 <body>
@@ -503,193 +368,129 @@
       <button class="mode-btn mode-evening" id="modeEveningBtn" onclick="switchMode('evening')">🌙 よる</button>
     </div>
 
-    <div class="tasks" id="tasksMorning" style="display:none"></div>
-    <div class="tasks" id="tasksEvening"></div>
+    <div class="tasks" id="tasksMorning" style="display:none">
+      <button class="task m-wake"      onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🌅</span>
+        <span class="t-name">おきる</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-gargle"    onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🚰</span>
+        <span class="t-name">うがい</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-meal"      onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🍳</span>
+        <span class="t-name">あさごはん</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-clothes"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">👕</span>
+        <span class="t-name">おきがえ</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-teeth"     onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🦷</span>
+        <span class="t-name">はみがき</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-bag"       onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🎒</span>
+        <span class="t-name">ほいくえんのようい</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-sunscreen" onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🧴</span>
+        <span class="t-name">ひやけどめをぬる</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-socks"     onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🧦</span>
+        <span class="t-name">くつしたをはく</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task m-go"        onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🚗</span>
+        <span class="t-name">しゅっぱつ！</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+    </div>
+
+    <div class="tasks" id="tasksEvening">
+      <button class="task c-bath"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🛁</span>
+        <span class="t-name">おふろ</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-meal"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🍚</span>
+        <span class="t-name">ごはん</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-yogurt" onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🥣</span>
+        <span class="t-name">よーぐると</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-moku"   onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🫧</span>
+        <span class="t-name">もくもく</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-water"  onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">💧</span>
+        <span class="t-name">おみずをのむ</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-teeth"  onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🦷</span>
+        <span class="t-name">はみがき</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-clean"  onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🧹</span>
+        <span class="t-name">おかたづけ</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+      <button class="task c-bed"    onclick="tap(this)">
+        <div class="stripe"></div><span class="t-icon">🛏️</span>
+        <span class="t-name">べっどにいく</span>
+        <div class="t-circle"><span class="t-check">✓</span></div>
+      </button>
+    </div>
 
     <div class="footer">
-      <div class="celeb" id="celeb">🎉 ぜんぶできたよ！えらい！ 🎉</div>
-      <div class="tool-row">
-        <button class="reset-btn" onclick="resetAll()">🔄 もう一度はじめる</button>
-        <button class="tool-btn" id="gearBtn" title="タスクの編集（長押し）">⚙️</button>
-        <button class="tool-btn" id="themeBtn" title="きせかえテーマ">🎨</button>
-        <button class="tool-btn" id="premiumBtn" title="プレミアム">⭐</button>
-      </div>
-      <a class="legal-link" href="legal.html" target="_blank">特定商取引法に基づく表記・プライバシーポリシー</a>
+      <div class="celeb" id="celeb">🎉 ぜんぶできたよ！えらい！🦖💫🦕 🎉</div>
+      <button class="reset-btn" onclick="resetAll()">🔄 もう一度はじめる</button>
     </div>
   </div>
 
   <!-- ===== 右：時計 ===== -->
   <div class="right" id="clockPanel" onclick="speakTime()" style="cursor:pointer;">
-    <div class="clock-label"><span id="clockIconL">🦕</span> いま なんじ？ <span id="clockIconR">🦖</span></div>
+    <div class="clock-label">🦕 いま なんじ？ 🦖</div>
     <canvas id="clockCanvas"></canvas>
     <div class="digital" id="digital">--:--</div>
   </div>
 </div>
 
-<!-- ===== プレミアムモーダル ===== -->
-<div class="olay" id="premiumModal" hidden>
-  <div class="modal">
-    <button class="close-x" data-close>×</button>
-    <h2>⭐ プレミアム</h2>
-    <div id="pmBody">
-      <div class="pm-price">買い切り 480円</div>
-      <ul class="pm-list">
-        <li>✏️ タスクを自由に編集：追加・削除・並べ替え・アイコン変更。「おくすり」「ぴあののれんしゅう」など、うちの子だけのやることりすとが作れます</li>
-        <li>🎨 きせかえテーマ：うちゅう・どうぶつ（完了のごほうび演出も変わります）</li>
-        <li>🔓 一度の購入でずっと使えます（月額なし）</li>
-      </ul>
-      <button class="pm-buy" id="buyBtn">購入する</button>
-      <div class="code-row">
-        <input id="codeInput" placeholder="かいじょコード" autocomplete="off" autocapitalize="characters">
-        <button id="redeemBtn">解除</button>
-      </div>
-      <div id="codeMsg"></div>
-    </div>
-    <div id="pmThanks" hidden style="text-align:center;padding:14px 0;">
-      <div style="font-size:2.6rem">⭐</div>
-      <p style="font-weight:800;color:#1E293B;margin-top:8px;">プレミアム解除済みです</p>
-      <p style="font-size:.85rem;color:#64748B;margin-top:4px;">いつもありがとうございます！</p>
-    </div>
-    <a class="pm-legal" href="legal.html" target="_blank">特定商取引法に基づく表記・プライバシーポリシー</a>
-  </div>
-</div>
-
-<!-- ===== タスク編集モーダル ===== -->
-<div class="olay" id="editModal" hidden>
-  <div class="modal">
-    <button class="close-x" data-close>×</button>
-    <h2>✏️ タスクの編集</h2>
-    <div class="edit-tabs">
-      <button class="edit-tab" id="editTabM">🌅 あさ</button>
-      <button class="edit-tab" id="editTabE">🌙 よる</button>
-    </div>
-    <div id="editList"></div>
-    <button class="add-task-btn" id="addTaskBtn">＋ タスクを追加</button>
-    <div class="edit-actions">
-      <button id="resetDefaultBtn">はじめの状態に戻す</button>
-      <button id="editCloseBtn">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 絵文字ピッカー ===== -->
-<div class="olay" id="emojiModal" hidden>
-  <div class="modal">
-    <button class="close-x" data-close>×</button>
-    <h2>アイコンをえらぶ</h2>
-    <div class="emoji-grid" id="emojiGrid"></div>
-  </div>
-</div>
-
-<!-- ===== テーマピッカー ===== -->
-<div class="olay" id="themeModal" hidden>
-  <div class="modal">
-    <button class="close-x" data-close>×</button>
-    <h2>🎨 きせかえテーマ</h2>
-    <div class="theme-grid" id="themeGrid"></div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
 <script>
-/* ================= 設定 ================= */
-/* Stripe Payment LinkのURL（Stripeダッシュボードで作成後に差し替え） */
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/REPLACE_ME';
-/* アンロックトークンのSHA-256ハッシュ（トークン本体はコードに置かない） */
-const PREMIUM_TOKEN_HASH = '9dff589f8c56838e3f2ff50d02f62cc0fcb1d6d5f5bb6575f1a7a9c6a98283b6';
-/* GoatCounterのサイトコード（アカウント作成後に設定。空なら計測しない） */
-const GOATCOUNTER_CODE = '';
-
-/* ================= 計測 ================= */
-if (GOATCOUNTER_CODE) {
-  const s = document.createElement('script');
-  s.async = true;
-  s.src = 'https://gc.zgo.at/count.js';
-  s.dataset.goatcounter = `https://${GOATCOUNTER_CODE}.goatcounter.com/count`;
-  document.head.appendChild(s);
-}
-function track(name) {
-  if (window.goatcounter && window.goatcounter.count) {
-    window.goatcounter.count({ path: name, event: true });
-  }
-}
-
-/* ================= テーマ ================= */
-/* celeb.variants: 全タスク完了時の演出プール。毎回ランダムに1つ選ばれる。
-   {svg:true} は手描きSVG演出（あさ=エラスモサウルス／よる=ティラノサウルス） */
-const THEMES = {
-  dino: {
-    label: 'きょうりゅう', free: true,
-    bg: ['🦖','🦕'],
-    iconL: '🦕', iconR: '🦖', mornL: '🌞', mornR: '☀️',
-    clockL: '🦕', clockR: '🦖',
-    celeb: {
-      color: '#9CCC65', glow: 'rgba(120,200,60,0.55)', bgc: 'rgba(8,25,5,0.9)',
-      variants: [
-        { svg: true },
-        { emoji: '🦖', label: 'がおー!!' },
-        { emoji: '🦕', label: 'のっしのっし!!' },
-        { emoji: '🌋', label: 'どっかーん!!' },
-        { emoji: '🥚', label: 'ぱっかーん!!' },
-      ],
-    },
-  },
-  space: {
-    label: 'うちゅう',
-    bg: ['🚀','🪐','⭐','🌟'],
-    iconL: '🪐', iconR: '🚀', mornL: '🌞', mornR: '🚀',
-    clockL: '🪐', clockR: '🚀',
-    celeb: {
-      color: '#B39DFF', glow: 'rgba(124,77,255,0.6)', bgc: 'rgba(12,6,40,0.9)',
-      variants: [
-        { emoji: '🚀', label: 'びゅーん!!' },
-        { emoji: '🛸', label: 'うぃんうぃん!!' },
-        { emoji: '🪐', label: 'ぐるんぐるん!!' },
-        { emoji: '🌟', label: 'きらきらー!!' },
-        { emoji: '☄️', label: 'しゅばーん!!' },
-      ],
-    },
-  },
-  animal: {
-    label: 'どうぶつ',
-    bg: ['🐶','🐱','🐰','🦁'],
-    iconL: '🐱', iconR: '🐶', mornL: '🌞', mornR: '🐶',
-    clockL: '🐰', clockR: '🦁',
-    celeb: {
-      color: '#FFC24D', glow: 'rgba(255,143,0,0.6)', bgc: 'rgba(48,26,0,0.9)',
-      variants: [
-        { emoji: '🦁', label: 'がおー!!' },
-        { emoji: '🐶', label: 'わんわん!!' },
-        { emoji: '🐱', label: 'にゃーん!!' },
-        { emoji: '🐰', label: 'ぴょんぴょん!!' },
-        { emoji: '🐘', label: 'ぱおーん!!' },
-      ],
-    },
-  },
-};
-let currentTheme = localStorage.getItem('oshitaku_theme_v1') || 'dino';
-if (!THEMES[currentTheme]) currentTheme = 'dino';
-
-/* ── 背景の浮遊絵文字 ── */
-const BG_SPOTS = [
-  {t:'3%', l:'2%',  s:'4rem',  d:'4.2s',dl:'0s'  },
-  {t:'72%',l:'3%',  s:'4.5rem',d:'5.1s',dl:'1.3s'},
-  {t:'38%',l:'46%', s:'3.5rem',d:'3.8s',dl:'0.7s'},
-  {t:'5%', r:'2%',  s:'4rem',  d:'4.7s',dl:'2s'  },
-  {t:'78%',r:'3%',  s:'4.5rem',d:'3.5s',dl:'0.4s'},
-  {t:'50%',r:'46%', s:'3rem',  d:'5.4s',dl:'1.7s'},
-  {t:'22%',l:'23%', s:'3rem',  d:'4s',  dl:'2.5s'},
-  {t:'58%',r:'22%', s:'3.5rem',d:'4.9s',dl:'0.9s'},
-];
-function renderBg() {
+/* ── 背景の恐竜 ── */
+(function () {
   const bg = document.getElementById('dinoBg');
-  const emojis = THEMES[currentTheme].bg;
-  bg.innerHTML = '';
-  BG_SPOTS.forEach((p, i) => {
+  const items = [
+    {e:'🦖',t:'3%', l:'2%',  s:'4rem',  d:'4.2s',dl:'0s'  },
+    {e:'🦕',t:'72%',l:'3%',  s:'4.5rem',d:'5.1s',dl:'1.3s'},
+    {e:'🦖',t:'38%',l:'46%', s:'3.5rem',d:'3.8s',dl:'0.7s'},
+    {e:'🦕',t:'5%', r:'2%',  s:'4rem',  d:'4.7s',dl:'2s'  },
+    {e:'🦖',t:'78%',r:'3%',  s:'4.5rem',d:'3.5s',dl:'0.4s'},
+    {e:'🦕',t:'50%',r:'46%', s:'3rem',  d:'5.4s',dl:'1.7s'},
+    {e:'🦖',t:'22%',l:'23%', s:'3rem',  d:'4s',  dl:'2.5s'},
+    {e:'🦕',t:'58%',r:'22%', s:'3.5rem',d:'4.9s',dl:'0.9s'},
+  ];
+  items.forEach(p => {
     const el = document.createElement('div');
     el.className = 'dino';
-    el.textContent = emojis[i % emojis.length];
+    el.textContent = p.e;
     el.style.fontSize = p.s;
     el.style.animationDuration = p.d;
     el.style.animationDelay   = p.dl;
@@ -698,89 +499,9 @@ function renderBg() {
     if (p.r) el.style.right = p.r;
     bg.appendChild(el);
   });
-}
+})();
 
-function applyTheme() {
-  const th = THEMES[currentTheme];
-  renderBg();
-  document.getElementById('clockIconL').textContent = th.clockL;
-  document.getElementById('clockIconR').textContent = th.clockR;
-  switchMode(currentMode);
-}
-
-/* ================= タスクデータ ================= */
-const PALETTE = [
-  ['#60B5F5','#1E88E5'], ['#FFA726','#EF6C00'], ['#F06292','#AD1457'],
-  ['#4DD0E1','#00838F'], ['#81C784','#2E7D32'], ['#7986CB','#283593'],
-  ['#FFD54F','#FF8F00'], ['#BA68C8','#6A1B9A'], ['#EF5350','#C62828'],
-  ['#4FC3F7','#0288D1'],
-];
-const DEFAULT_TASKS = {
-  morning: [
-    {name:'おきる',           icon:'🌅'},
-    {name:'かおをあらう',     icon:'🧼'},
-    {name:'あさごはん',       icon:'🍳'},
-    {name:'おきがえ',         icon:'👕'},
-    {name:'はみがき',         icon:'🦷'},
-    {name:'もちもののようい', icon:'🎒'},
-    {name:'くつしたをはく',   icon:'🧦'},
-    {name:'しゅっぱつ！',     icon:'🚗'},
-  ],
-  evening: [
-    {name:'おふろ',           icon:'🛁'},
-    {name:'ごはん',           icon:'🍚'},
-    {name:'はみがき',         icon:'🦷'},
-    {name:'おみずをのむ',     icon:'💧'},
-    {name:'おかたづけ',       icon:'🧹'},
-    {name:'といれ',           icon:'🚽'},
-    {name:'べっどにいく',     icon:'🛏️'},
-  ],
-};
-function loadTasks() {
-  try {
-    const raw = localStorage.getItem('oshitaku_tasks_v1');
-    if (raw) {
-      const t = JSON.parse(raw);
-      if (t && Array.isArray(t.morning) && Array.isArray(t.evening)
-          && t.morning.length && t.evening.length) return t;
-    }
-  } catch (e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_TASKS));
-}
-let tasks = loadTasks();
-function saveTasks() {
-  localStorage.setItem('oshitaku_tasks_v1', JSON.stringify(tasks));
-}
-
-function renderTasks() {
-  ['morning', 'evening'].forEach(mode => {
-    const cont = document.getElementById(mode === 'morning' ? 'tasksMorning' : 'tasksEvening');
-    cont.innerHTML = '';
-    tasks[mode].forEach((t, i) => {
-      const [c1, c2] = PALETTE[i % PALETTE.length];
-      const btn = document.createElement('button');
-      btn.className = 'task';
-      btn.onclick = () => tap(btn);
-      const stripe = document.createElement('div');
-      stripe.className = 'stripe';
-      stripe.style.background = `linear-gradient(180deg,${c1},${c2})`;
-      const icon = document.createElement('span');
-      icon.className = 't-icon';
-      icon.textContent = t.icon;
-      const name = document.createElement('span');
-      name.className = 't-name';
-      name.textContent = t.name;
-      const circle = document.createElement('div');
-      circle.className = 't-circle';
-      circle.innerHTML = '<span class="t-check">✓</span>';
-      btn.append(stripe, icon, name, circle);
-      cont.appendChild(btn);
-    });
-  });
-  checkAll();
-}
-
-/* ================= アナログ時計 ================= */
+/* ── アナログ時計 ── */
 const canvas = document.getElementById('clockCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -904,7 +625,7 @@ function drawClock() {
 
 function tick() { drawClock(); requestAnimationFrame(tick); }
 
-/* ================= あさ／よる 切り替え ================= */
+/* ── あさ／よる 切り替え ── */
 let currentMode = 'evening';
 
 function activeTasksEl() {
@@ -914,18 +635,17 @@ function activeTasksEl() {
 function switchMode(mode) {
   currentMode = mode;
   const isMorning = mode === 'morning';
-  const th = THEMES[currentTheme];
   document.getElementById('tasksMorning').style.display = isMorning ? 'flex' : 'none';
   document.getElementById('tasksEvening').style.display = isMorning ? 'none' : 'flex';
   document.getElementById('modeMorningBtn').classList.toggle('active', isMorning);
   document.getElementById('modeEveningBtn').classList.toggle('active', !isMorning);
   document.getElementById('boardTitle').textContent = isMorning ? 'あさの やることりすと' : 'よるの やることりすと';
-  document.getElementById('boardIconL').textContent = isMorning ? th.mornL : th.iconL;
-  document.getElementById('boardIconR').textContent = isMorning ? th.mornR : th.iconR;
+  document.getElementById('boardIconL').textContent = isMorning ? '🌞' : '🦕';
+  document.getElementById('boardIconR').textContent = isMorning ? '☀️' : '🦖';
   checkAll();
 }
 
-/* ================= タスク操作 ================= */
+/* ── タスク ── */
 function tap(btn) {
   const completing = !btn.classList.contains('done');
   btn.classList.toggle('done');
@@ -944,18 +664,10 @@ function checkAll() {
   const all  = container.querySelectorAll('.task');
   const done = container.querySelectorAll('.task.done');
   const cel  = document.getElementById('celeb');
-  if (all.length && all.length === done.length) {
+  if (all.length === done.length) {
     cel.style.display = 'block';
     confetti();
-    setTimeout(() => {
-      const c = THEMES[currentTheme].celeb;
-      const v = c.variants[Math.floor(Math.random() * c.variants.length)];
-      if (v.svg) {
-        (currentMode === 'morning' ? showElasmosaurus : showTRex)();
-      } else {
-        showGenericCeleb(c, v);
-      }
-    }, 800);
+    setTimeout(currentMode === 'morning' ? showElasmosaurus : showTRex, 800);
   } else {
     cel.style.display = 'none';
   }
@@ -966,7 +678,7 @@ function resetAll() {
   document.getElementById('celeb').style.display = 'none';
 }
 
-/* ================= コンフェッティ ================= */
+/* ── コンフェッティ ── */
 function confetti() {
   const cols = ['#22C55E','#3B82F6','#F59E0B','#EC4899','#8B5CF6','#EF4444','#06B6D4','#FBBF24'];
   for (let i = 0; i < 90; i++) {
@@ -987,37 +699,7 @@ function confetti() {
   }
 }
 
-/* ================= 完了演出の効果音 ================= */
-function playRumble(baseFreq, lpFreq) {
-  try {
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const dur = 2.8, sr = ac.sampleRate;
-    const buf = ac.createBuffer(1, sr * dur, sr);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) {
-      const t = i / sr;
-      const env = Math.min(1, t * 6) * Math.pow(Math.max(0, 1 - t / dur), 0.4);
-      const f = baseFreq + t * 25;
-      const vib = Math.sin(2 * Math.PI * 7 * t) * 0.018;
-      d[i] = (
-        Math.sin(2 * Math.PI * f * (1 + vib) * t) * 0.38 +
-        Math.sin(2 * Math.PI * f * 1.48 * t) * 0.22 +
-        Math.sin(2 * Math.PI * f * 2.02 * t) * 0.14 +
-        Math.sin(2 * Math.PI * 190 * t) * 0.08 +
-        (Math.random() - 0.5) * 0.14
-      ) * env * 0.75;
-    }
-    const src = ac.createBufferSource();
-    src.buffer = buf;
-    const lp = ac.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = lpFreq;
-    const g = ac.createGain(); g.gain.value = 1.4;
-    src.connect(lp); lp.connect(g); g.connect(ac.destination);
-    src.start();
-  } catch(e) {}
-}
-
-/* ================= ティラノサウルス演出（きょうりゅう・よる） ================= */
+/* ── ティラノサウルス演出 ── */
 function showTRex() {
   if (document.getElementById('trexOverlay')) return;
   const ov = document.createElement('div');
@@ -1109,7 +791,35 @@ function showTRex() {
     });
   }, 500);
 
-  playRumble(55, 380);
+  function playRoar() {
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const dur = 2.8, sr = ac.sampleRate;
+      const buf = ac.createBuffer(1, sr * dur, sr);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) {
+        const t = i / sr;
+        const env = Math.min(1, t * 6) * Math.pow(Math.max(0, 1 - t / dur), 0.4);
+        const f = 55 + t * 25;
+        const vib = Math.sin(2 * Math.PI * 7 * t) * 0.018;
+        d[i] = (
+          Math.sin(2 * Math.PI * f * (1 + vib) * t) * 0.38 +
+          Math.sin(2 * Math.PI * f * 1.48 * t) * 0.22 +
+          Math.sin(2 * Math.PI * f * 2.02 * t) * 0.14 +
+          Math.sin(2 * Math.PI * 190 * t) * 0.08 +
+          (Math.random() - 0.5) * 0.14
+        ) * env * 0.75;
+      }
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      const lp = ac.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 380;
+      const g = ac.createGain(); g.gain.value = 1.4;
+      src.connect(lp); lp.connect(g); g.connect(ac.destination);
+      src.start();
+    } catch(e) {}
+  }
+  playRoar();
 
   setTimeout(() => {
     ov.style.transition = 'opacity 0.8s';
@@ -1124,7 +834,7 @@ function showTRex() {
   });
 }
 
-/* ================= エラスモサウルス演出（きょうりゅう・あさ） ================= */
+/* ── エラスモサウルス演出（あさVer） ── */
 function showElasmosaurus() {
   if (document.getElementById('elasmoOverlay')) return;
   const ov = document.createElement('div');
@@ -1238,49 +948,7 @@ function showElasmosaurus() {
   });
 }
 
-/* ================= 汎用完了演出 ================= */
-function showGenericCeleb(c, v) {
-  if (document.getElementById('genOverlay')) return;
-  const ov = document.createElement('div');
-  ov.id = 'genOverlay';
-  ov.style.background = c.bgc;
-
-  const label = document.createElement('div');
-  label.className = 'gen-label';
-  label.textContent = v.label;
-  label.style.color = c.color;
-  label.style.textShadow = `0 0 30px ${c.glow}, 0 0 70px ${c.glow}`;
-
-  const em = document.createElement('div');
-  em.className = 'gen-emoji';
-  em.textContent = v.emoji;
-  em.style.filter = `drop-shadow(0 0 30px ${c.glow})`;
-
-  const hint = document.createElement('div');
-  hint.id = 'trexTapHint';
-  hint.textContent = 'タップで閉じる';
-
-  ov.append(label, em, hint);
-  document.body.appendChild(ov);
-
-  ov.classList.add('shake');
-  setTimeout(() => ov.classList.remove('shake'), 1200);
-  playRumble(85, 500);
-
-  setTimeout(() => {
-    ov.style.transition = 'opacity 0.8s';
-    ov.style.opacity = '0';
-    setTimeout(() => ov.remove(), 800);
-  }, 4500);
-
-  ov.addEventListener('click', () => {
-    ov.style.transition = 'opacity 0.3s';
-    ov.style.opacity = '0';
-    setTimeout(() => ov.remove(), 300);
-  });
-}
-
-/* ================= 時刻読み上げ ================= */
+/* ── 時刻読み上げ ── */
 /* ひらがなベタ書きだと音声エンジンがアクセントを推定できず不自然になるため、
    漢字まじりの文を渡し、端末にある中で最も自然な日本語音声を選ぶ */
 let jpVoice = null;
@@ -1324,290 +992,7 @@ function speakTime() {
   speechSynthesis.speak(utter);
 }
 
-/* ================= トースト ================= */
-let toastTimer = null;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-/* ================= プレミアム ================= */
-let isPremium = false;
-let premiumReady = null;
-
-async function sha256(text) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
-async function verifyToken(t) {
-  if (!t || !window.crypto || !crypto.subtle) return false;
-  try {
-    return (await sha256(t.trim().toUpperCase())) === PREMIUM_TOKEN_HASH;
-  } catch (e) { return false; }
-}
-
-async function initPremium() {
-  if (await verifyToken(localStorage.getItem('oshitaku_premium'))) {
-    isPremium = true;
-  }
-  const p = new URLSearchParams(location.search).get('unlock');
-  if (p) {
-    if (await verifyToken(p)) {
-      localStorage.setItem('oshitaku_premium', p.trim().toUpperCase());
-      isPremium = true;
-      track('unlock-success');
-      confetti();
-      showToast('プレミアムが解除されました。ありがとうございます！');
-    }
-    history.replaceState(null, '', location.pathname);
-  }
-}
-
-async function openPremiumModal(from) {
-  if (premiumReady) await premiumReady;
-  document.getElementById('pmBody').hidden = isPremium;
-  document.getElementById('pmThanks').hidden = !isPremium;
-  document.getElementById('codeMsg').textContent = '';
-  openModal('premiumModal');
-  track('premium-modal-open');
-  if (from) track('premium-gate-' + from);
-}
-
-function setupPremiumUi() {
-  const buyBtn = document.getElementById('buyBtn');
-  if (STRIPE_PAYMENT_LINK.includes('REPLACE_ME')) {
-    buyBtn.disabled = true;
-    buyBtn.textContent = '準備中（近日公開）';
-  }
-  buyBtn.addEventListener('click', () => {
-    if (modalJustOpened()) return;
-    track('buy-click');
-    window.open(STRIPE_PAYMENT_LINK, '_blank');
-  });
-
-  document.getElementById('redeemBtn').addEventListener('click', async () => {
-    const input = document.getElementById('codeInput');
-    const msg = document.getElementById('codeMsg');
-    if (await verifyToken(input.value)) {
-      localStorage.setItem('oshitaku_premium', input.value.trim().toUpperCase());
-      isPremium = true;
-      track('unlock-success');
-      msg.style.color = '#16A34A';
-      msg.textContent = '解除しました！ありがとうございます！';
-      confetti();
-      setTimeout(() => {
-        document.getElementById('premiumModal').hidden = true;
-      }, 1200);
-    } else {
-      msg.style.color = '#DC2626';
-      msg.textContent = 'コードがちがうようです';
-    }
-  });
-}
-
-/* ================= タスク編集 ================= */
-let editMode = 'evening';
-const EDIT_EMOJIS = [
-  '🌅','🧼','🚰','🍳','🍚','🍱',
-  '🥣','🥛','💧','👕','🧥','🧦',
-  '👟','🦷','🪥','🛁','🚽','🧹',
-  '🧸','🛏️','😴','⏰','🎒','📚',
-  '✏️','🎨','🎹','⚽','🚲','🚗',
-  '🌂','💊','🩹','🐶','⭐','🌙',
-];
-let emojiTarget = -1;
-
-async function openEditModal() {
-  if (premiumReady) await premiumReady;
-  if (!isPremium) { openPremiumModal('edit'); return; }
-  editMode = currentMode;
-  buildEditList();
-  openModal('editModal');
-}
-
-function buildEditList() {
-  document.getElementById('editTabM').classList.toggle('active', editMode === 'morning');
-  document.getElementById('editTabE').classList.toggle('active', editMode === 'evening');
-  const list = document.getElementById('editList');
-  list.innerHTML = '';
-  tasks[editMode].forEach((t, i) => {
-    const row = document.createElement('div');
-    row.className = 'edit-row';
-
-    const up = document.createElement('button');
-    up.className = 'mv'; up.textContent = '▲'; up.disabled = i === 0;
-    up.onclick = () => {
-      [tasks[editMode][i-1], tasks[editMode][i]] = [tasks[editMode][i], tasks[editMode][i-1]];
-      saveTasks(); renderTasks(); buildEditList();
-    };
-
-    const dn = document.createElement('button');
-    dn.className = 'mv'; dn.textContent = '▼'; dn.disabled = i === tasks[editMode].length - 1;
-    dn.onclick = () => {
-      [tasks[editMode][i], tasks[editMode][i+1]] = [tasks[editMode][i+1], tasks[editMode][i]];
-      saveTasks(); renderTasks(); buildEditList();
-    };
-
-    const ic = document.createElement('button');
-    ic.className = 'icon-pick'; ic.textContent = t.icon;
-    ic.onclick = () => {
-      emojiTarget = i;
-      openModal('emojiModal');
-    };
-
-    const inp = document.createElement('input');
-    inp.value = t.name;
-    inp.maxLength = 14;
-    inp.addEventListener('input', () => {
-      tasks[editMode][i].name = inp.value;
-      saveTasks(); renderTasks();
-    });
-
-    const del = document.createElement('button');
-    del.className = 'del'; del.textContent = '🗑';
-    del.onclick = () => {
-      if (tasks[editMode].length <= 1) { showToast('さいごの1個は消せません'); return; }
-      if (confirm(`「${t.name}」を削除しますか？`)) {
-        tasks[editMode].splice(i, 1);
-        saveTasks(); renderTasks(); buildEditList();
-      }
-    };
-
-    row.append(up, dn, ic, inp, del);
-    list.appendChild(row);
-  });
-}
-
-function setupEditUi() {
-  document.getElementById('editTabM').onclick = () => { editMode = 'morning'; buildEditList(); };
-  document.getElementById('editTabE').onclick = () => { editMode = 'evening'; buildEditList(); };
-
-  document.getElementById('addTaskBtn').onclick = () => {
-    if (tasks[editMode].length >= 12) { showToast('タスクは12個までです'); return; }
-    tasks[editMode].push({ name: 'あたらしいタスク', icon: '⭐' });
-    saveTasks(); renderTasks(); buildEditList();
-  };
-
-  document.getElementById('resetDefaultBtn').onclick = () => {
-    if (confirm(`「${editMode === 'morning' ? 'あさ' : 'よる'}」のタスクをはじめの状態に戻しますか？`)) {
-      tasks[editMode] = JSON.parse(JSON.stringify(DEFAULT_TASKS[editMode]));
-      saveTasks(); renderTasks(); buildEditList();
-    }
-  };
-
-  document.getElementById('editCloseBtn').onclick = () => {
-    document.getElementById('editModal').hidden = true;
-  };
-
-  /* 絵文字ピッカー */
-  const grid = document.getElementById('emojiGrid');
-  EDIT_EMOJIS.forEach(e => {
-    const b = document.createElement('button');
-    b.textContent = e;
-    b.onclick = () => {
-      if (modalJustOpened()) return;
-      if (emojiTarget >= 0 && tasks[editMode][emojiTarget]) {
-        tasks[editMode][emojiTarget].icon = e;
-        saveTasks(); renderTasks(); buildEditList();
-      }
-      document.getElementById('emojiModal').hidden = true;
-    };
-    grid.appendChild(b);
-  });
-
-  /* 歯車は長押しで起動（子どもの誤タップ防止） */
-  const gearBtn = document.getElementById('gearBtn');
-  let gearTimer = null, gearFired = false;
-  gearBtn.addEventListener('pointerdown', () => {
-    gearFired = false;
-    gearTimer = setTimeout(() => { gearFired = true; openEditModal(); }, 600);
-  });
-  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
-    gearBtn.addEventListener(ev, () => clearTimeout(gearTimer))
-  );
-  gearBtn.addEventListener('click', () => {
-    if (!gearFired) showToast('ながおしで ひらくよ');
-  });
-  gearBtn.addEventListener('contextmenu', e => e.preventDefault());
-}
-
-/* ================= テーマピッカー ================= */
-function buildThemeGrid() {
-  const grid = document.getElementById('themeGrid');
-  grid.innerHTML = '';
-  Object.entries(THEMES).forEach(([key, th]) => {
-    const card = document.createElement('button');
-    card.className = 'theme-card' + (key === currentTheme ? ' active' : '');
-    const locked = !th.free && !isPremium;
-
-    const em = document.createElement('span');
-    em.className = 'th-emojis';
-    em.textContent = th.bg.slice(0, 2).join('');
-    const lb = document.createElement('span');
-    lb.textContent = th.label;
-    card.append(em, lb);
-    if (locked) {
-      const lock = document.createElement('span');
-      lock.className = 'lock';
-      lock.textContent = '🔒 プレミアム';
-      card.appendChild(lock);
-    } else if (key === currentTheme) {
-      const cur = document.createElement('span');
-      cur.className = 'lock';
-      cur.textContent = '✔ 使用中';
-      card.appendChild(cur);
-    }
-
-    card.onclick = () => {
-      if (modalJustOpened()) return;
-      if (locked) {
-        document.getElementById('themeModal').hidden = true;
-        openPremiumModal('theme');
-        return;
-      }
-      currentTheme = key;
-      localStorage.setItem('oshitaku_theme_v1', key);
-      applyTheme();
-      buildThemeGrid();
-      document.getElementById('themeModal').hidden = true;
-    };
-    grid.appendChild(card);
-  });
-}
-
-/* ================= モーダル共通 ================= */
-/* 開いた直後の350msはモーダル内クリックを無視する。
-   タップの取りこぼし（ゴーストクリック・子どもの連打）が、
-   開いた瞬間のモーダル内ボタンに誤ヒットするのを防ぐ */
-let lastModalOpenAt = 0;
-function openModal(id) {
-  document.getElementById(id).hidden = false;
-  lastModalOpenAt = Date.now();
-}
-function modalJustOpened() {
-  return Date.now() - lastModalOpenAt < 350;
-}
-
-function setupModals() {
-  document.querySelectorAll('.olay').forEach(olay => {
-    olay.addEventListener('click', e => {
-      if (e.target === olay && !modalJustOpened()) olay.hidden = true;
-    });
-    const x = olay.querySelector('[data-close]');
-    if (x) x.addEventListener('click', () => { olay.hidden = true; });
-  });
-  document.getElementById('premiumBtn').addEventListener('click', () => openPremiumModal());
-  document.getElementById('themeBtn').addEventListener('click', async () => {
-    if (premiumReady) await premiumReady;
-    buildThemeGrid();
-    openModal('themeModal');
-  });
-}
-
-/* ================= 初期化 ================= */
+/* ── 初期化 ── */
 if (window.ResizeObserver) {
   new ResizeObserver(resizeClock).observe(document.getElementById('clockPanel'));
 }
@@ -1619,15 +1004,9 @@ function pollResize() {
 }
 
 window.addEventListener('load', () => {
-  renderTasks();
-  applyTheme();
   const h = new Date().getHours();
   switchMode(h >= 4 && h < 11 ? 'morning' : 'evening');
-  setupModals();
-  setupPremiumUi();
-  setupEditUi();
   pollResize(); tick();
-  premiumReady = initPremium();
 });
 window.addEventListener('resize', resizeClock);
 </script>

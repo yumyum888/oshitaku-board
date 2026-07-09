@@ -532,7 +532,7 @@
     <button class="close-x" data-close>×</button>
     <h2>⭐ プレミアム</h2>
     <div id="pmBody">
-      <div class="pm-price">買い切り 480円</div>
+      <div class="pm-price">買い切り 480円（税込）</div>
       <ul class="pm-list">
         <li>✏️ タスクを自由に編集：追加・削除・並べ替え・アイコン変更。「おくすり」「ぴあののれんしゅう」など、うちの子だけのやることりすとが作れます</li>
         <li>🎨 きせかえテーマ：うちゅう・どうぶつ（完了のごほうび演出も変わります）</li>
@@ -549,6 +549,8 @@
       <div style="font-size:2.6rem">⭐</div>
       <p style="font-weight:800;color:#1E293B;margin-top:8px;">プレミアム解除済みです</p>
       <p style="font-size:.85rem;color:#64748B;margin-top:4px;">いつもありがとうございます！</p>
+      <p style="font-size:.78rem;color:#94A3B8;margin-top:14px;">別の端末で使うときは、その端末でこのコードを入力してください</p>
+      <div id="pmCode" style="font-weight:800;font-size:1.05rem;color:#334155;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;padding:8px 12px;margin-top:6px;display:inline-block;letter-spacing:1px;"></div>
     </div>
     <a class="pm-legal" href="legal.html" target="_blank">特定商取引法に基づく表記・プライバシーポリシー</a>
   </div>
@@ -595,7 +597,7 @@
 <script>
 /* ================= 設定 ================= */
 /* Stripe Payment LinkのURL（Stripeダッシュボードで作成後に差し替え） */
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/REPLACE_ME';
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/bJe3cx8P97i37khcSKbfO01';
 /* アンロックトークンのSHA-256ハッシュ（トークン本体はコードに置かない） */
 const PREMIUM_TOKEN_HASH = '9dff589f8c56838e3f2ff50d02f62cc0fcb1d6d5f5bb6575f1a7a9c6a98283b6';
 /* GoatCounterのサイトコード（アカウント作成後に設定。空なら計測しない） */
@@ -1370,6 +1372,9 @@ async function openPremiumModal(from) {
   if (premiumReady) await premiumReady;
   document.getElementById('pmBody').hidden = isPremium;
   document.getElementById('pmThanks').hidden = !isPremium;
+  if (isPremium) {
+    document.getElementById('pmCode').textContent = localStorage.getItem('oshitaku_premium') || '';
+  }
   document.getElementById('codeMsg').textContent = '';
   openModal('premiumModal');
   track('premium-modal-open');

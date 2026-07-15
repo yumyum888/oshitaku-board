@@ -211,8 +211,13 @@
       font-weight:900; color:#1E3A8A; letter-spacing:4px;
       background:rgba(255,255,255,.8); padding:4px 18px;
       border-radius:14px; box-shadow:0 3px 10px rgba(0,0,0,.08);
-      flex-shrink:0;
+      flex-shrink:0; cursor:pointer;
+      transition:background .25s, color .25s;
     }
+    /* タップで答え（デジタル表示）を隠す。アナログ時計だけで
+       じかんを読む練習ができるように。文字はtransparentにするだけで
+       DOM上のテキストは残すため、再表示時に即座に正しい値が出る */
+    .digital.hidden { background:#1E293B; color:transparent; }
 
     /* コンフェッティ */
     @keyframes cfFall {
@@ -469,7 +474,7 @@
   <div class="right" id="clockPanel" onclick="speakTime()" style="cursor:pointer;">
     <div class="clock-label">🦕 いま なんじ？ 🦖</div>
     <canvas id="clockCanvas"></canvas>
-    <div class="digital" id="digital">--:--</div>
+    <div class="digital" id="digital" onclick="toggleDigital(event)">--:--</div>
   </div>
 </div>
 
@@ -509,6 +514,11 @@ const ctx    = canvas.getContext('2d');
    （60秒で1分、の概念を子どもがつかみやすいように） */
 let _lastMinute = -1;
 let _minuteTickAt = null;
+
+/* 秒針も同様に、なめらかな連続移動ではなく1秒ごとに「カチッ」と動く
+   （本物のクオーツ時計の秒針の動きに近づける） */
+let _lastSecond = -1;
+let _secondTickAt = null;
 
 function resizeClock() {
   const panel = document.getElementById('clockPanel');
@@ -592,8 +602,7 @@ function drawClock() {
 
   const now = new Date();
   const h  = now.getHours() % 12, m = now.getMinutes();
-  const s  = now.getSeconds(),    ms = now.getMilliseconds();
-  const sS = s + ms / 1000;
+  const s  = now.getSeconds();
   const hS = h + m / 60;   // 時針は分に合わせてゆっくり進む
 
   /* 分針は秒針が0秒に戻った瞬間だけ「カチッ」と1分ぶん動く。
@@ -609,10 +618,22 @@ function drawClock() {
     else _minuteTickAt = null;
   }
 
+  /* 秒針も同じ理屈で、1秒ごとに「カチッ」と固定位置へ動く */
+  if (s !== _lastSecond) {
+    if (_lastSecond !== -1) _secondTickAt = now.getTime();
+    _lastSecond = s;
+  }
+  let secondBounce = 0;
+  if (_secondTickAt !== null) {
+    const dt = (now.getTime() - _secondTickAt) / 1000;
+    if (dt < 0.3) secondBounce = 0.07 * Math.exp(-dt * 16) * Math.sin(2 * Math.PI * 7 * dt);
+    else _secondTickAt = null;
+  }
+
   drawHand((hS / 12) * 2 * Math.PI - Math.PI / 2, R * .50, Math.max(8, size * .021), '#1E3A8A');
   drawHand((m / 60) * 2 * Math.PI - Math.PI / 2 + minuteBounce, R * .72, Math.max(6, size * .013), '#DC2626');
 
-  const sA = (sS / 60) * 2 * Math.PI - Math.PI / 2;
+  const sA = (s / 60) * 2 * Math.PI - Math.PI / 2 + secondBounce;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 5;
   ctx.strokeStyle = '#EA580C'; ctx.lineWidth = Math.max(2, size * .005); ctx.lineCap = 'round';
@@ -1009,6 +1030,14 @@ function speakTime() {
   utter.rate = 1.0;
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
+}
+
+/* デジタル表示（答え）のタップで黒く隠す／再タップで見せる。
+   親の時計パネル全体には「タップで読み上げ」が付いているため、
+   ここだけは伝播を止めて読み上げが同時に鳴らないようにする */
+function toggleDigital(e) {
+  e.stopPropagation();
+  document.getElementById('digital').classList.toggle('hidden');
 }
 
 /* ── 初期化 ── */

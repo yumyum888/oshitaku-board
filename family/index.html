@@ -505,6 +505,11 @@
 const canvas = document.getElementById('clockCanvas');
 const ctx    = canvas.getContext('2d');
 
+/* 分針を「秒針が一周したらカチッと1分進む」動きにするための状態
+   （60秒で1分、の概念を子どもがつかみやすいように） */
+let _lastMinute = -1;
+let _minuteTickAt = null;
+
 function resizeClock() {
   const panel = document.getElementById('clockPanel');
   const w = panel.clientWidth;
@@ -588,10 +593,24 @@ function drawClock() {
   const now = new Date();
   const h  = now.getHours() % 12, m = now.getMinutes();
   const s  = now.getSeconds(),    ms = now.getMilliseconds();
-  const sS = s + ms / 1000, mS = m + sS / 60, hS = h + mS / 60;
+  const sS = s + ms / 1000;
+  const hS = h + m / 60;   // 時針は分に合わせてゆっくり進む
+
+  /* 分針は秒針が0秒に戻った瞬間だけ「カチッ」と1分ぶん動く。
+     切り替わった直後に軽くバウンドさせて動きを目立たせる。 */
+  if (m !== _lastMinute) {
+    if (_lastMinute !== -1) _minuteTickAt = now.getTime();
+    _lastMinute = m;
+  }
+  let minuteBounce = 0;
+  if (_minuteTickAt !== null) {
+    const dt = (now.getTime() - _minuteTickAt) / 1000;
+    if (dt < 0.5) minuteBounce = 0.09 * Math.exp(-dt * 11) * Math.sin(2 * Math.PI * 6 * dt);
+    else _minuteTickAt = null;
+  }
 
   drawHand((hS / 12) * 2 * Math.PI - Math.PI / 2, R * .50, Math.max(8, size * .021), '#1E3A8A');
-  drawHand((mS / 60) * 2 * Math.PI - Math.PI / 2, R * .72, Math.max(6, size * .013), '#DC2626');
+  drawHand((m / 60) * 2 * Math.PI - Math.PI / 2 + minuteBounce, R * .72, Math.max(6, size * .013), '#DC2626');
 
   const sA = (sS / 60) * 2 * Math.PI - Math.PI / 2;
   ctx.save();

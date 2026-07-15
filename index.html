@@ -294,56 +294,62 @@
     @keyframes hintIn { to{opacity:1} }
 
     /* ── エラスモサウルス演出（あさVer） ── */
-    #elasmoOverlay {
+    /* ── モササウルス演出（あさVer） ── */
+    #mosaOverlay {
       position:fixed;inset:0;z-index:99999;
-      background:rgba(0,20,45,0.88);
+      background:radial-gradient(ellipse at 52% 22%,rgba(10,62,92,0.9),rgba(2,16,34,0.94));
       display:flex;align-items:flex-end;justify-content:center;
       cursor:pointer;overflow:hidden;
     }
-    #elasmoOverlay.shake { animation:trexShake 0.1s ease infinite; }
-    #elasmoBgGlow {
+    #mosaOverlay.shake { animation:trexShake 0.1s ease infinite; }
+    #mosaRays {
       position:absolute;inset:0;pointer-events:none;
-      background:radial-gradient(ellipse at 60% 60%,rgba(0,180,255,0.3) 0%,transparent 65%);
-      animation:glowPulse 0.45s ease infinite alternate;
+      background:
+        linear-gradient(202deg,rgba(150,220,255,0.16) 0%,transparent 22%),
+        linear-gradient(166deg,rgba(150,220,255,0.10) 0%,transparent 28%),
+        radial-gradient(ellipse at 55% 28%,rgba(0,190,255,0.28) 0%,transparent 60%);
+      animation:glowPulse 0.5s ease infinite alternate;
     }
-    #elasmoSvgWrap {
+    #mosaSvgWrap {
       position:relative;flex-shrink:0;
-      width:min(94vw,540px);
-      filter:drop-shadow(0 0 30px rgba(0,180,255,0.55));
-      animation:trexRise 0.65s cubic-bezier(0.22,1,0.36,1) forwards;
+      width:min(96vw,560px);
+      filter:drop-shadow(0 0 34px rgba(0,170,235,0.55));
+      animation:trexRise 0.7s cubic-bezier(0.22,1,0.36,1) forwards;
     }
-    #elasmoNeck {
+    #mosaBody {
       transform-box:fill-box;
-      transform-origin:60% 96%;
-      animation:neckSway 1.2s 0.6s ease-in-out infinite alternate;
+      transform-origin:32% 86%;
+      animation:mosaLunge 0.7s 0.55s cubic-bezier(0.22,1,0.36,1) both,
+                mosaSway 2.2s 1.4s ease-in-out infinite alternate;
     }
-    @keyframes neckSway { from{transform:rotate(-2deg)} to{transform:rotate(3deg)} }
-    #elasmoRoarLabel {
+    @keyframes mosaLunge { from{transform:rotate(8deg) translateY(8px)} to{transform:rotate(0) translateY(0)} }
+    @keyframes mosaSway  { from{transform:rotate(-1.5deg)} to{transform:rotate(2deg)} }
+    #mosaRoarLabel {
       position:absolute;top:6%;left:50%;
       white-space:nowrap;
       font-size:clamp(2.2rem,8vw,5.5rem);font-weight:900;
       font-family:Impact,'Arial Black',sans-serif;letter-spacing:4px;
-      color:#00CFFF;
+      color:#26E0FF;
       opacity:0;
-      animation:roarBoom 0.3s 0.75s cubic-bezier(0.175,0.885,0.32,1.275) forwards,
-                elasmoFlicker 0.18s 1.05s ease infinite alternate;
+      animation:roarBoom 0.3s 0.8s cubic-bezier(0.175,0.885,0.32,1.275) forwards,
+                mosaFlicker 0.18s 1.1s ease infinite alternate;
       transform:translateX(-50%);
     }
-    @keyframes elasmoFlicker {
-      from{text-shadow:0 0 20px rgba(0,190,255,0.9),0 0 50px rgba(0,140,255,0.6)}
-      to{text-shadow:0 0 45px rgba(0,220,255,1),0 0 90px rgba(0,150,255,0.9),0 0 130px rgba(0,100,255,0.4)}
+    @keyframes mosaFlicker {
+      from{text-shadow:0 0 20px rgba(0,200,255,0.9),0 0 50px rgba(0,150,255,0.6)}
+      to{text-shadow:0 0 45px rgba(0,230,255,1),0 0 95px rgba(0,160,255,0.9),0 0 140px rgba(0,110,255,0.4)}
     }
-    .elasmoSplash {
+    .mosaSplash {
       position:absolute;bottom:2%;
       border-radius:50%;
-      background:radial-gradient(circle,rgba(190,235,255,0.8),rgba(80,170,220,0.15));
+      background:radial-gradient(circle,rgba(200,240,255,0.85),rgba(90,180,225,0.15));
       pointer-events:none;
       animation:dustPuff 1.2s ease-out forwards;
     }
-    #elasmoTapHint {
+    #mosaTapHint {
       position:absolute;bottom:3%;left:50%;transform:translateX(-50%);
       color:rgba(255,255,255,0.45);font-size:clamp(0.75rem,2vw,1rem);
-      white-space:nowrap;opacity:0;animation:hintIn 0.5s 1.8s ease forwards;
+      white-space:nowrap;opacity:0;animation:hintIn 0.5s 2s ease forwards;
     }
 
     /* ── 汎用完了演出（うちゅう・どうぶつテーマ） ── */
@@ -786,6 +792,11 @@ function renderTasks() {
 const canvas = document.getElementById('clockCanvas');
 const ctx    = canvas.getContext('2d');
 
+/* 分針を「秒針が一周したらカチッと1分進む」動きにするための状態
+   （60秒で1分、の概念を子どもがつかみやすいように） */
+let _lastMinute = -1;
+let _minuteTickAt = null;
+
 function resizeClock() {
   const panel = document.getElementById('clockPanel');
   const w = panel.clientWidth;
@@ -869,10 +880,24 @@ function drawClock() {
   const now = new Date();
   const h  = now.getHours() % 12, m = now.getMinutes();
   const s  = now.getSeconds(),    ms = now.getMilliseconds();
-  const sS = s + ms / 1000, mS = m + sS / 60, hS = h + mS / 60;
+  const sS = s + ms / 1000;
+  const hS = h + m / 60;   // 時針は分に合わせてゆっくり進む
+
+  /* 分針は秒針が0秒に戻った瞬間だけ「カチッ」と1分ぶん動く。
+     切り替わった直後に軽くバウンドさせて動きを目立たせる。 */
+  if (m !== _lastMinute) {
+    if (_lastMinute !== -1) _minuteTickAt = now.getTime();
+    _lastMinute = m;
+  }
+  let minuteBounce = 0;
+  if (_minuteTickAt !== null) {
+    const dt = (now.getTime() - _minuteTickAt) / 1000;
+    if (dt < 0.5) minuteBounce = 0.09 * Math.exp(-dt * 11) * Math.sin(2 * Math.PI * 6 * dt);
+    else _minuteTickAt = null;
+  }
 
   drawHand((hS / 12) * 2 * Math.PI - Math.PI / 2, R * .50, Math.max(8, size * .021), '#1E3A8A');
-  drawHand((mS / 60) * 2 * Math.PI - Math.PI / 2, R * .72, Math.max(6, size * .013), '#DC2626');
+  drawHand((m / 60) * 2 * Math.PI - Math.PI / 2 + minuteBounce, R * .72, Math.max(6, size * .013), '#DC2626');
 
   const sA = (sS / 60) * 2 * Math.PI - Math.PI / 2;
   ctx.save();
@@ -953,7 +978,7 @@ function checkAll() {
       const c = THEMES[currentTheme].celeb;
       const v = c.variants[Math.floor(Math.random() * c.variants.length)];
       if (v.svg) {
-        (currentMode === 'morning' ? showElasmosaurus : showTRex)();
+        (currentMode === 'morning' ? showMosasaurus : showTRex)();
       } else {
         showGenericCeleb(c, v);
       }
@@ -1127,100 +1152,143 @@ function showTRex() {
 }
 
 /* ================= エラスモサウルス演出（きょうりゅう・あさ） ================= */
-function showElasmosaurus() {
-  if (document.getElementById('elasmoOverlay')) return;
+function showMosasaurus() {
+  if (document.getElementById('mosaOverlay')) return;
   const ov = document.createElement('div');
-  ov.id = 'elasmoOverlay';
+  ov.id = 'mosaOverlay';
   ov.innerHTML = `
-    <div id="elasmoBgGlow"></div>
-    <div id="elasmoRoarLabel">ザバァァン!!</div>
-    <div id="elasmoSvgWrap">
+    <div id="mosaRays"></div>
+    <div id="mosaRoarLabel">ザバァァン!!</div>
+    <div id="mosaSvgWrap">
       <svg viewBox="0 0 560 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
-        <!-- 水面 -->
-        <path d="M 55,400 Q 70,378 110,382 Q 150,360 200,372 Q 240,352 300,362 Q 370,350 420,368 Q 470,360 500,382 Q 525,390 520,412 Q 480,440 300,444 Q 110,440 60,415 Z" fill="#A5D8EC"/>
-        <ellipse cx="300" cy="415" rx="215" ry="30" fill="#C8EAF6" opacity="0.7"/>
+        <!-- 奥の水面 -->
+        <path d="M 0,360 Q 80,344 150,354 Q 230,338 300,350 Q 380,336 450,352 Q 520,342 560,356 L 560,460 L 0,460 Z" fill="#2C6C86" opacity="0.55"/>
 
-        <!-- しっぽ -->
-        <path d="M 425,320 Q 495,308 542,285 Q 515,340 448,362 Q 430,350 425,320 Z" fill="#6E8DB1"/>
+        <g id="mosaBody">
+          <!-- しっぽ -->
+          <path d="M 150,332 Q 80,340 34,372 Q 74,360 120,360 Q 116,386 150,394 Q 170,360 174,330 Z" fill="#2E4A39"/>
+          <path d="M 42,368 Q 62,384 94,388 Q 74,362 120,360 Q 84,352 42,368 Z" fill="#233D2E"/>
 
-        <!-- 奥のヒレ -->
-        <path d="M 240,380 Q 200,420 165,432 Q 195,438 230,420 Q 252,404 258,388 Z" fill="#54719A"/>
+          <!-- 奥のヒレ -->
+          <path d="M 252,350 Q 236,404 208,430 Q 248,416 270,384 Q 278,362 274,348 Z" fill="#294435"/>
 
-        <!-- 胴体 -->
-        <ellipse cx="320" cy="345" rx="128" ry="78" fill="#7F9DBE"/>
-        <ellipse cx="300" cy="315" rx="90" ry="42" fill="#93AFCB" opacity="0.5"/>
+          <!-- 胴体 -->
+          <ellipse cx="272" cy="322" rx="156" ry="66" fill="#33513E" transform="rotate(-11 272 322)"/>
+          <!-- 背中の濃い陰 -->
+          <path d="M 130,300 Q 250,250 392,286 Q 300,270 200,286 Q 158,294 130,300 Z" fill="#25402E" opacity="0.9"/>
+          <!-- 明るい側面 -->
+          <ellipse cx="280" cy="338" rx="140" ry="42" fill="#5C7C60" opacity="0.5" transform="rotate(-11 280 338)"/>
 
-        <!-- おなか -->
-        <ellipse cx="330" cy="390" rx="102" ry="46" fill="#F4E7C8"/>
+          <!-- 背びれ（キール） -->
+          <path d="M 362,262 Q 300,242 210,266 Q 150,282 118,300" stroke="#22382B" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.85"/>
 
-        <!-- 手前のヒレ -->
-        <path d="M 265,400 Q 235,440 190,452 Q 225,458 265,440 Q 288,424 292,406 Q 278,398 265,400 Z" fill="#5E7DA4"/>
-        <path d="M 370,402 Q 372,442 348,458 Q 388,452 404,428 Q 410,412 402,400 Q 385,396 370,402 Z" fill="#5E7DA4"/>
+          <!-- 手前のヒレ -->
+          <path d="M 336,330 Q 322,386 300,410 Q 346,392 364,352 Q 368,336 358,326 Z" fill="#2B4736"/>
+          <path d="M 340,338 Q 332,368 320,392" stroke="#1F332A" stroke-width="2" fill="none" opacity="0.6"/>
 
-        <!-- 首と頭（ゆったり揺れる） -->
-        <g id="elasmoNeck">
-          <path d="M 300,320 C 280,250 250,190 252,120 L 218,118 C 214,190 240,255 262,325 Z" fill="#7F9DBE"/>
-          <ellipse cx="240" cy="105" rx="42" ry="28" fill="#7F9DBE" transform="rotate(-6 240 105)"/>
-          <path d="M 244,122 Q 266,130 284,120 Q 276,136 254,138 Q 240,134 238,124 Z" fill="#F4E7C8"/>
-          <path d="M 250,118 Q 268,124 283,114" stroke="#4A6076" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <circle cx="252" cy="98" r="6.5" fill="#26343F"/>
-          <circle cx="254" cy="96" r="2.2" fill="white"/>
-          <circle cx="274" cy="97" r="1.8" fill="#4A6076"/>
+          <!-- 首（胴と頭をつなぐ） -->
+          <path d="M 356,262 Q 362,306 398,332 Q 420,342 374,300 Q 366,282 372,262 Z" fill="#33513E"/>
+
+          <!-- 口の中 -->
+          <path d="M 396,286 Q 452,208 500,166 Q 488,224 470,238 Q 430,266 396,286 Z" fill="#6E3A46"/>
+
+          <!-- 下あご -->
+          <path d="M 392,290 C 420,262 452,240 478,224 C 484,230 484,240 478,246 C 452,262 420,284 400,302 C 394,300 392,296 392,290 Z" fill="#37573F"/>
+          <path d="M 392,290 C 420,262 452,240 478,224 C 470,236 448,252 420,272 Q 404,284 392,290 Z" fill="#C7D0B0" opacity="0.5"/>
+          <!-- 下の歯 -->
+          <path d="M 404,286 L 402,272 L 412,282 Z" fill="#F2ECD6"/>
+          <path d="M 420,275 L 419,261 L 429,271 Z" fill="#F2ECD6"/>
+          <path d="M 437,264 L 437,250 L 446,260 Z" fill="#F2ECD6"/>
+          <path d="M 453,254 L 454,240 L 462,250 Z" fill="#F2ECD6"/>
+          <path d="M 468,244 L 470,231 L 477,241 Z" fill="#F2ECD6"/>
+
+          <!-- 上あご・頭 -->
+          <path d="M 360,266 C 392,216 444,178 500,152 C 506,162 506,171 500,178 C 452,206 414,240 392,290 C 378,284 366,276 360,266 Z" fill="#31503C"/>
+          <!-- 頭の明るい部分 -->
+          <path d="M 372,258 C 400,220 446,188 494,162 C 456,190 424,222 402,262 Q 386,262 372,258 Z" fill="#6E8C6E" opacity="0.42"/>
+          <!-- 上の歯 -->
+          <path d="M 402,286 L 402,300 L 411,290 Z" fill="#F2ECD6"/>
+          <path d="M 418,272 L 419,287 L 428,276 Z" fill="#F2ECD6"/>
+          <path d="M 435,258 L 437,273 L 445,262 Z" fill="#F2ECD6"/>
+          <path d="M 452,245 L 454,260 L 461,249 Z" fill="#F2ECD6"/>
+          <path d="M 468,233 L 471,247 L 477,236 Z" fill="#F2ECD6"/>
+          <path d="M 483,222 L 486,235 L 492,225 Z" fill="#F2ECD6"/>
+
+          <!-- 鼻の穴 -->
+          <ellipse cx="474" cy="176" rx="5" ry="3" fill="#1B2C22" transform="rotate(-28 474 176)"/>
+          <!-- 目 -->
+          <circle cx="408" cy="230" r="11" fill="#182A1E"/>
+          <circle cx="408" cy="230" r="7.5" fill="#D3A23E"/>
+          <circle cx="409" cy="231" r="3.4" fill="#101A11"/>
+          <circle cx="411" cy="227" r="2.1" fill="#FFFFFF" opacity="0.9"/>
+          <path d="M 396,219 Q 410,212 424,220" stroke="#22382B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+          <!-- うろこ / 質感 -->
+          <circle cx="220" cy="300" r="3" fill="#25402E" opacity="0.5"/>
+          <circle cx="256" cy="292" r="3" fill="#25402E" opacity="0.5"/>
+          <circle cx="292" cy="292" r="2.6" fill="#25402E" opacity="0.5"/>
+          <circle cx="240" cy="318" r="2.6" fill="#25402E" opacity="0.4"/>
+          <path d="M 180,312 Q 240,300 310,306" stroke="#25402E" stroke-width="1.4" fill="none" opacity="0.4"/>
+          <path d="M 200,330 Q 262,322 332,330" stroke="#25402E" stroke-width="1.4" fill="none" opacity="0.35"/>
         </g>
 
-        <!-- 水しぶき -->
-        <path d="M 205,372 Q 190,352 196,332 Q 178,348 186,372 Z" fill="#E9F8FE" opacity="0.9"/>
-        <path d="M 448,362 Q 462,340 456,320 Q 474,338 466,362 Z" fill="#E9F8FE" opacity="0.9"/>
-        <circle cx="160" cy="330" r="6" fill="#DFF4FB"/>
-        <circle cx="176" cy="302" r="4" fill="#DFF4FB"/>
-        <circle cx="472" cy="308" r="5" fill="#DFF4FB"/>
-        <circle cx="452" cy="284" r="3" fill="#DFF4FB"/>
-        <path d="M 120,408 Q 160,398 200,408" stroke="#E9F8FE" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
-        <path d="M 380,414 Q 420,404 460,412" stroke="#E9F8FE" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <!-- 手前の水面と泡 -->
+        <path d="M 0,352 Q 90,340 160,350 Q 235,336 300,348 Q 380,334 452,350 Q 522,340 560,352 L 560,402 Q 400,384 300,390 Q 150,384 0,398 Z" fill="#A5D8EC" opacity="0.85"/>
+        <ellipse cx="250" cy="356" rx="150" ry="18" fill="#EAFAFF" opacity="0.7"/>
+        <!-- しぶき -->
+        <path d="M 150,352 Q 132,326 140,300 Q 118,326 126,354 Z" fill="#EAFAFF" opacity="0.9"/>
+        <path d="M 360,352 Q 380,320 372,296 Q 400,322 388,356 Z" fill="#EAFAFF" opacity="0.9"/>
+        <circle cx="120" cy="322" r="6" fill="#DFF4FB"/>
+        <circle cx="140" cy="296" r="4" fill="#DFF4FB"/>
+        <circle cx="392" cy="300" r="6" fill="#DFF4FB"/>
+        <circle cx="372" cy="278" r="4" fill="#DFF4FB"/>
+        <circle cx="300" cy="344" r="4" fill="#DFF4FB"/>
+        <path d="M 80,372 Q 150,360 220,372" stroke="#EAFAFF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <path d="M 330,376 Q 420,364 500,376" stroke="#EAFAFF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
       </svg>
     </div>
-    <div id="elasmoTapHint">タップで閉じる</div>
+    <div id="mosaTapHint">タップで閉じる</div>
   `;
   document.body.appendChild(ov);
 
   ov.classList.add('shake');
-  setTimeout(() => ov.classList.remove('shake'), 1800);
+  setTimeout(() => ov.classList.remove('shake'), 1900);
 
   setTimeout(() => {
-    [[22, 26], [40, 20], [15, 16], [55, 22]].forEach(([lp, sz], i) => {
+    [[24, 30], [42, 22], [16, 18], [54, 24], [34, 16]].forEach(([lp, sz], i) => {
       const splash = document.createElement('div');
-      splash.className = 'elasmoSplash';
-      splash.style.cssText = `left:${lp}%;width:${sz}px;height:${sz}px;animation-delay:${i*0.13}s`;
+      splash.className = 'mosaSplash';
+      splash.style.cssText = `left:${lp}%;width:${sz}px;height:${sz}px;animation-delay:${i*0.11}s`;
       ov.appendChild(splash);
     });
-  }, 500);
+  }, 520);
 
   function playSplashRoar() {
     try {
       const ac = new (window.AudioContext || window.webkitAudioContext)();
-      const dur = 2.4, sr = ac.sampleRate;
+      const dur = 2.6, sr = ac.sampleRate;
       const buf = ac.createBuffer(1, sr * dur, sr);
       const d = buf.getChannelData(0);
       for (let i = 0; i < d.length; i++) {
         const t = i / sr;
-        const splashEnv = t < 0.35 ? Math.max(0, 1 - t / 0.35) : 0;
+        const splashEnv = t < 0.4 ? Math.max(0, 1 - t / 0.4) : 0;
         const splashNoise = (Math.random() - 0.5) * 2 * splashEnv * 0.6;
-        const gt = Math.max(0, t - 0.15);
-        const groanEnv = Math.min(1, gt * 4) * Math.pow(Math.max(0, 1 - gt / (dur - 0.15)), 0.5);
-        const f = 65 + gt * 20;
-        const vib = Math.sin(2 * Math.PI * 7 * t) * 0.018;
+        const gt = Math.max(0, t - 0.18);
+        const groanEnv = Math.min(1, gt * 4) * Math.pow(Math.max(0, 1 - gt / (dur - 0.18)), 0.5);
+        const f = 58 + gt * 18;
+        const vib = Math.sin(2 * Math.PI * 6 * t) * 0.02;
         const groan = (
-          Math.sin(2 * Math.PI * f * (1 + vib) * gt) * 0.38 +
-          Math.sin(2 * Math.PI * f * 1.48 * gt) * 0.22 +
-          Math.sin(2 * Math.PI * f * 2.02 * gt) * 0.14
+          Math.sin(2 * Math.PI * f * (1 + vib) * gt) * 0.4 +
+          Math.sin(2 * Math.PI * f * 1.5 * gt) * 0.22 +
+          Math.sin(2 * Math.PI * f * 2.0 * gt) * 0.14
         ) * groanEnv;
-        d[i] = (splashNoise + groan) * 0.8;
+        d[i] = (splashNoise + groan) * 0.82;
       }
       const src = ac.createBufferSource();
       src.buffer = buf;
       const lp = ac.createBiquadFilter();
-      lp.type = 'lowpass'; lp.frequency.value = 500;
-      const g = ac.createGain(); g.gain.value = 1.3;
+      lp.type = 'lowpass'; lp.frequency.value = 480;
+      const g = ac.createGain(); g.gain.value = 1.35;
       src.connect(lp); lp.connect(g); g.connect(ac.destination);
       src.start();
     } catch(e) {}

@@ -219,6 +219,11 @@
        DOM上のテキストは残すため、再表示時に即座に正しい値が出る */
     .digital.hidden { background:#1E293B; color:transparent; }
 
+    .digital-hint {
+      font-size:clamp(.65rem,1.3vw,.8rem); color:#94A3B8; font-weight:700;
+      margin-top:4px; flex-shrink:0; text-align:center;
+    }
+
     /* コンフェッティ */
     @keyframes cfFall {
       0%   { opacity:1; transform:translateY(-60px) rotate(0deg); }
@@ -475,6 +480,7 @@
     <div class="clock-label">🦕 いま なんじ？ 🦖</div>
     <canvas id="clockCanvas"></canvas>
     <div class="digital" id="digital" onclick="toggleDigital(event)">--:--</div>
+    <div class="digital-hint" id="digitalHint">たっぷでかくれるよ！かくしてとけいをよんでみよう！</div>
   </div>
 </div>
 
@@ -626,7 +632,7 @@ function drawClock() {
   let secondBounce = 0;
   if (_secondTickAt !== null) {
     const dt = (now.getTime() - _secondTickAt) / 1000;
-    if (dt < 0.3) secondBounce = 0.07 * Math.exp(-dt * 16) * Math.sin(2 * Math.PI * 7 * dt);
+    if (dt < 0.2) secondBounce = 0.03 * Math.exp(-dt * 22) * Math.sin(2 * Math.PI * 5 * dt);
     else _secondTickAt = null;
   }
 
@@ -1037,7 +1043,10 @@ function speakTime() {
    ここだけは伝播を止めて読み上げが同時に鳴らないようにする */
 function toggleDigital(e) {
   e.stopPropagation();
-  document.getElementById('digital').classList.toggle('hidden');
+  const digital = document.getElementById('digital');
+  const hidden = digital.classList.toggle('hidden');
+  document.getElementById('digitalHint').textContent =
+    hidden ? 'もういちどタップでみえるよ' : 'たっぷでかくれるよ！かくしてとけいをよんでみよう！';
 }
 
 /* ── 初期化 ── */
